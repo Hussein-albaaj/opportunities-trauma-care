@@ -1,0 +1,26 @@
+---
+title: "Timeline"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+> groups = data.frame(id = 1:4, content = c("Outreaching", "System/Platform Changes", "Xmas Shutdown Period", "Key Milestone"))
+> timevis(dt, groups, width = 900)
+> library(timevis)
+> 
+> data <- data.frame(
++     id      = 1:4,
++     content = c("Course start", "Study progress report",
++                 "Seminar-version of project", "Examinaton seminar"),
++     start   = c("2022-01-17", "2022-02-14",
++                 "2022-05-09", "2022-05-18"),
++     end     = c(NA, NA, NA, NA)
++ )
+> 
+> timevis(data)
+```
+
