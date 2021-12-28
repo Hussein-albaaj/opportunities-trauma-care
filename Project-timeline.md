@@ -47,3 +47,5 @@
 ## Week 18-20
 - Revise project paper based on comments and feedback from peers,
   course leaders, examiners, and me
+
+![Rplot](https://user-images.githubusercontent.com/96419736/147613462-004d7887-daa8-4a3b-a6d1-90562290802f.jpeg)
