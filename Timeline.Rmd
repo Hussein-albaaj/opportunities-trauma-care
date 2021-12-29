@@ -8,32 +8,15 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-> groups = data.frame(id = 1:4, content = c("Outreaching", "System/Platform Changes", "Xmas Shutdown Period", "Key Milestone"))
-> timevis(dt, groups, width = 900)
-> library(timevis)
-> 
-> data <- data.frame(
-+     id      = 1:4,
-+     content = c("Course start", "Study progress report",
-+                 "Seminar-version of project", "Examinaton seminar"),
-+     start   = c("2022-01-17", "2022-02-14",
-+                 "2022-05-09", "2022-05-18"),
-+     end     = c(NA, NA, NA, NA)
-+ )
-> 
-> timevis(data)
-```
-
-```{r}
 library(timevis)
 
 data <- data.frame(
-    id      = 1:5,
-    content = c("Course start", "Study progress report",
-                "Seminar-version of project", "Examination seminar", "Project end"),
-    start   = c("2022-01-07", "2022-02-14",
-                "2022-05-09", "2022-05-18", "2022-05-30"),
-    end     = c(NA, NA, NA, NA, NA)
+  id      = 1:4,
+  content = c("Item one", "Item two",
+              "Ranged item", "Item four"),
+  start   = c("2016-01-10", "2016-01-11",
+              "2016-01-20", "2016-02-14 15:00:00"),
+  end     = c(NA, NA, "2016-02-04", NA)
 )
 
 timevis(data)
