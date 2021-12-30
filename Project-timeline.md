@@ -2,7 +2,7 @@
 
 
 ## Week 1 (2022-01-17 - 2022-01-21)
-- #### Course start: 2022-01-07
+- ### Course start: 2022-01-07
 - Setup GitHub and create a repository for the [project](https://github.com/Hussein-albaaj/opportunities-trauma-care)
 - Install Rstudio and Slack
 - Draft a timeline
@@ -43,8 +43,12 @@
 - Revise final project paper and upload a second version.
 
 ## Week 17 (2022-05-09 - 2022-05-13)
+- ### Seminar-version of project uploaded: 2022-05-09
 - Revise second version of final project paper and submit.
 
 ## Week 18-20 (2022-05-16 - 2022-06-03)
+- ### Examination: 2020-05-(18-20)
 - Revise project paper based on comments and feedback from peers,
   course leaders, examiners, and me
+- ### Project uploaded: 2022-05-30
+- ### End of semester: 2022-06-03 
