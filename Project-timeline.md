@@ -16,7 +16,7 @@
   to clean the data.
 - Draft and upload the progress report.
 - Read up.
-  
+
 ## Week 4
 - Revise code based on feedback.
 - Add code that creates a first table of sample characteristics.
@@ -38,12 +38,16 @@
 ## Week 15
 - Draft and upload final project paper.
 
-## Week 16 
+## Week 16
 - Revise final project paper and upload a second version.
 
-## Week 17 
+## Week 17
 - Revise second version of final project paper and submit.
 
 ## Week 18-20
 - Revise project paper based on comments and feedback from peers,
   course leaders, examiners, and me
+
+
+
+
