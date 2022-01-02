@@ -1,6 +1,6 @@
 ---
-title: Factors associated with opportunities for improvement in trauma
-care
+title: Help
+subtitle: Add a Subtitle if Needed
 author: Hussein Albaaj
 bibliography: bibliography.bib
 csl: bmcemerg.csl
