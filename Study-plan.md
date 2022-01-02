@@ -1,5 +1,5 @@
 ---
-title: "Improvment in trauma"
+title: "Factors associated with oppotunities for improvement in trauma care"
 author: "Hussein Albaaj"
 csl: bmcemerg.csl
 bibliography: bibliography.bib
