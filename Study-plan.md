@@ -1,7 +1,7 @@
 ---
-title: The Title of Your Study Here
-subtitle: Add a Subtitle if Needed
-author: Your name here
+title: Factors associated with opportunities for improvement in trauma
+care
+author: Hussein Albaaj
 bibliography: bibliography.bib
 csl: bmcemerg.csl
 ---
