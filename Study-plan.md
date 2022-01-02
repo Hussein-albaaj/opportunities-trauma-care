@@ -6,11 +6,6 @@ bibliography: bibliography.bib
 ---
 
 
-*The study plan should be 3-4 pages long and written in
-[markdown](https://rmarkdown.rstudio.com/) (like this
-document). Remove all comments in italic when you use this document as
-a template for your own study plan.*
-
 Introduction
 ============
 
