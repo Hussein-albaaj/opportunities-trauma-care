@@ -1,9 +1,10 @@
 ---
-title: Help
+title: "Improvment in trauma"
+author: "Hussein Albaaj"
 subtitle: Add a Subtitle if Needed
-author: Hussein Albaaj
-bibliography: bibliography.bib
+output: pdf_document
 csl: bmcemerg.csl
+bibliography: bibliography.bib
 ---
 
 
