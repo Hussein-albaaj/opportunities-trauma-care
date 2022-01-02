@@ -1,18 +1,7 @@
 ---
-title: "Study plan"
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-
----
-title: Factors associated with opportunities for improvement in trauma
-care
-author: Hussein Albaaj
-bibliography: bibliography.bib
+Title: "Factors associated with opportunities for improvement in trauma care"
+Author: Hussein Albaaj
+Bibliography: bibliography.bib
 csl: bmcemerg.csl
 ---
 
