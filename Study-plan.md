@@ -1,20 +1,11 @@
 ---
-title: "Study plan"
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-
----
-title: Factors associated with opportunities for improvement in trauma
+Title: Factors associated with opportunities for improvement in trauma
 care
-author: Hussein Albaaj
-bibliography: bibliography.bib
-csl: bmcemerg.csl
+Author: Hussein Albaaj
+Bibliography: bibliography.bib
+Csl: bmcemerg.csl
 ---
+
 
 *The study plan should be 3-4 pages long and written in
 [markdown](https://rmarkdown.rstudio.com/) (like this
