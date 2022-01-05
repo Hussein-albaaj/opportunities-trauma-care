@@ -54,6 +54,5 @@
 - ### Examination: 2020-05-(18-20)
 - Revise project paper based on comments and feedback.
 
-================================================
 - ### Project uploaded: 2022-05-30
 - ### End of semester: 2022-06-03
