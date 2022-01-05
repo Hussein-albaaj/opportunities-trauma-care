@@ -16,14 +16,9 @@
 - Start writing code and upload a first script that imports and begin
   to clean the data.
 - Draft and upload the progress report.
-<<<<<<< HEAD
 - Read up.
 
-## Week 4
-=======
-  
 ## Week 4 (2022-02-07 - 2022-02-11)
->>>>>>> d6017b5dfb20f6dbe3951a32e0888d62df78c389
 - Revise code based on feedback.
 - Add code that creates a first table of sample characteristics.
 - Revise progress report based on feedback and submit.
@@ -45,30 +40,20 @@
 ## Week 15 (2022-04-25 - 2022-04-29)
 - Draft and upload final project paper.
 
-<<<<<<< HEAD
 ## Week 16
 - Revise final project paper and upload a second version.
 
-## Week 17
-=======
 ## Week 16 (2022-05-02 - 2022-05-06)
 - Revise final project paper and upload a second version.
 
 ## Week 17 (2022-05-09 - 2022-05-13)
 - ### Seminar-version of project uploaded: 2022-05-09
->>>>>>> d6017b5dfb20f6dbe3951a32e0888d62df78c389
 - Revise second version of final project paper and submit.
 
 ## Week 18-20 (2022-05-16 - 2022-06-03)
 - ### Examination: 2020-05-(18-20)
-- Revise project paper based on comments and feedback from peers,
-  course leaders, examiners, and me
-<<<<<<< HEAD
+- Revise project paper based on comments and feedback.
 
-
-
-
-=======
+================================================
 - ### Project uploaded: 2022-05-30
-- ### End of semester: 2022-06-03 
->>>>>>> d6017b5dfb20f6dbe3951a32e0888d62df78c389
+- ### End of semester: 2022-06-03
