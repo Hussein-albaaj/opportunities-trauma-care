@@ -1,9 +1,9 @@
 ---
-title: "Study_plan"
+title: "Study plan"
 output:
   html_document:
-    df_print: paged
 bibliography: citations.bib
+csl: bmcemerg.csl
 ---
 
 # Introduction
