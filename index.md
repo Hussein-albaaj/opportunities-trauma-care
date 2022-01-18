@@ -18,5 +18,28 @@ There are many steps to follow in trauma care, involving different professions. 
 
 # Methods
 
+### Study design
+
+Using a trauma registry and a trauma care quality database from Karolinska University Hospital in Solna, Sweden, will we create a registry based cohort study. Only about ten percent of the patients included in the trauma registry are also iuncluded in the trauma care quality database, since it is a subset of the registry for patients selected for review. 
+
+### Setting
+
+As previously mentioned trauma care is one of the most prevalent causes for admission and dedicated trauma teams are of utter importance to provide the best care possible. Therefore trauma patients are directly transported to a hospital with such competence in Sweden. Karolinska University Hospital provide care for all trauma patients in Stockholm.
+
+21 000 patients are included in the trauma registry and 2 200 of which are also included in the trauma care quality database, those patients were selected for review. All the patients included in the trauma registry are treated between 2012 and 2021. The trauma care quality database include opportunities for improvement as the main outcome and is defined as yes or no, identified by multidisciplinary review boards.
+
+### Participants
+
+### Variables
+
+### Data sources and measurements
+
+### Bias
+
+### Study size
+
+### Quantitive variables
+
+### Statistical methods
 
 # References
