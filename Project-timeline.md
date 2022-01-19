@@ -10,19 +10,19 @@
 
 ## Week 2 (2022-01-24 - 2022-01-28)
 - Revise study plan based on feedback.
-- Read up.
+- Work on publication
 
 ## Week 3 (2022-01-31 - 2022-02-04)
 - Start writing code and upload a first script that imports and begin
   to clean the data.
 - Draft and upload the progress report.
-- Read up.
+- Work on publication.
 
 ## Week 4 (2022-02-07 - 2022-02-11)
 - Revise code based on feedback.
 - Add code that creates a first table of sample characteristics.
 - Revise progress report based on feedback and submit.
-- Read up.
+- Work on publication.
 
 ## Week 5-10 (2022-02-14 - 2022-03-25)
 - ### Study progress report: 2022-02-14
