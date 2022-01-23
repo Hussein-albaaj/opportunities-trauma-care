@@ -1,13 +1,16 @@
 ---
 title: "Study plan"
 output:
-  html_document: null
   word_document: default
   pdf_document: default
 bibliography: citations.bib
 csl: bmcemerg.csl
 link-citations: yes
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
 # Introduction
 
