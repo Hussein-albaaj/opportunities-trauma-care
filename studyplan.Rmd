@@ -1,17 +1,21 @@
 ---
 title: "Study plan"
 output:
-  html_document: null
-  word_document: default
-  pdf_document: default
+#  word_document: default
+ # pdf_document: default
 bibliography: citations.bib
 csl: bmcemerg.csl
 link-citations: yes
 
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
 # Introduction
 
+<<<<<<< HEAD
 Defined as physical injury and the body´s consequential response, trauma, is one of the leading causes of mortality and morbidity in all age groups and the leading cause of mortality in people below the age of 44 [@David2021] [@champion1990]. Approximately 5.8 million people die each year due to trauma. Motor vehicle crashes alone stand for more than one million deaths and roughly between 20 and 50 million injuries annually [@Committee2013]. With an average of more than 7 days in the hospital each stay [@champion1990], it is one of the most prevalent reasons for admission. In 2020 road traffic accidents were third in disease burden worldwide, measured by Disability-Adjusted Life Years (DALY),  a term used to describe the impact of health problems and to measure the significance of improvement in medical care [@Murray1996],[@Haagsma2015].
 
 In many cases the outcome is mostly dependent on the quality of care acquired [@Dogrul2020]. In a teaching hospital in Tehran, reviews of all trauma cases in 1 year displayed inappropriate care in 45% of all deaths and implied that approximately 26% of all trauma deaths were preventable [@Zafarghandi2003]. Preventable death panels aim to decrease the amount of preventable deaths by investigating common factors between the cases [@Jung2019]. Airway management, inadequate chest compression, inadequate blood or fluid supply are some factors that previously were found in need of improvement in trauma care [@Zafarghandi2003],[@Maio1996]. Such advances in trauma care are the leading cause of the decreased amount of preventable deaths according to the American College of Surgeons Committee [@Committee2013].
@@ -20,22 +24,28 @@ It has always been of great importance to investigate factors that can be improv
 
 Despite the evidence supporting the use of predefined models for case selection, there is limited data on specific factors associated with opportunities for improvement in trauma care [@Slater2020]. Therefore methods such as audit filters are adopted in trauma quality improvement programs. Audit filters are predefined factors used in the selection of cases for review and represent an unfavorable alternation, proclaimed leading to a disadvantageous outcome [@WHO2009],[@Evans2009]. Set audit filters are for instance systolic blood pressure under 90, Glasgow Coma Scale less than 9 and not intubated, time to acute intervention more than 60 minutes and a few more. A systematic review of audit filters in 2009 found no studies meeting set criteria determining the effectiveness of set audit filters [@Evans2009]. 
 
-To this day trauma quality improvement programs rely on set filters for the selection of cases for M&M conferences. Some studies have found no major opportunities for improvement in currently used audit filters and believe further advancements are essential [@Cryer1996],[@Copes1995]. We hypothesize that the selection of cases for multidisciplinary mortality and morbidity reviews can be refined by the usage of other factors. This can be achieved by the examination of many other factors registered in a database. We aim therefore to find factors associated with improvement in trauma care for later development of models trained to identify cases with capacity for improvement. 
+To this day trauma quality improvement programs rely on set filters for the selection of cases for M&M conferences. Some studies have found no major opportunities for improvement in currently used audit filters and believe further advancements are essential [@Cryer1996],[@Copes1995]. We hypothesize that the selection of cases for multidisciplinary mortality and morbidity reviews can be refined by the usage of other factors. We aim therefore to find factors associated with improvement in trauma care for later development of models trained to identify cases with capacity for improvement. This can be investigated by the examination of many other factors registered in our database.
 
 # Methods
 
 ### Study design
 
 Using a trauma registry and a trauma care quality database from Karolinska University Hospital in Solna, Sweden, will we create a registry based cohort study. Only about ten percent of the patients included in the trauma registry are also included in the trauma care quality database, since it is a subset of the registry for patients selected for review. Comparison of the two databases will be made to obtain factors that are correlated to improvement in trauma care.
+<!-- Skriv ut de exakta registernamnen. Undvik värderande ord likt "only". Länken mellan de två registren görs via en gemensam ID parameter men detta behöver ej vara med i study design. -->
 
 ### Setting
 
 As previously mentioned trauma care is one of the most prevalent causes for admission and dedicated trauma teams are of utter importance to provide the best care possible. Therefore trauma patients are directly transported to a hospital with such competence in Sweden. Karolinska University Hospital provide care for all trauma patients in Stockholm, and include trauma patients in two different databases.
 
+<!--Delar av detta stycker hör om något till introduktionen. Här räcker det med att beskriva traumasystemet i KS. Level one trauma center, direct access to a multidicsiplinary team, radiology and intervention and operation, etc etc. Lite kort om den prehospitala biten. -->
+
 21 000 patients are included in the trauma registry and 2 200 of which are also included in the trauma care quality database, those patients were selected for review. All the patients included in the trauma registry are treated between 2012 and 2021. The trauma care quality database include opportunities for improvement as the main outcome and is defined as yes or no, identified by multidisciplinary review boards.
+
+<!--Detta hör till participants -->
 
 Since our aim is to identify factors associated with improvement in trauma care, the database used will therefore have some factors that can be further examined. The information registered in the database is divided into sections. First of all the transportation is included, the time taken from reported trauma until the patient arrives at the hospital. Demographics, including age and gender. Vital signs such as blood pressure, respiratory rate, saturation, pulse, temperature and also Glasgow coma scale upon arrival [@Swetrau2020]. Glasgow coma scale is a assessment used to determine the conscious level of the patient and if there is a probability of neurological damage [@Teasdale2014]. The types of injuries acquired and the mechanism of the trauma. Procedures performed on the patient are also included [@Swetrau2020].
 
+<!--Delar är irrelevant medans vissa sajer kan användas i exv predictors -->
 
 ### Participants
 
