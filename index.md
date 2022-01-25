@@ -1,12 +1,12 @@
 ---
 title: "Study plan"
 output:
-  html_document: null
-  word_document: default
-  pdf_document: default
+#  word_document: default
+ # pdf_document: default
 bibliography: citations.bib
 csl: bmcemerg.csl
 link-citations: yes
+
 ---
 
 # Introduction
@@ -19,26 +19,23 @@ It has always been of great importance to investigate factors that can be improv
 
 Despite the evidence supporting the use of predefined models for case selection, there is limited data on specific factors associated with opportunities for improvement in trauma care [@Slater2020]. Therefore methods such as audit filters are adopted in trauma quality improvement programs. Audit filters are predefined factors used in the selection of cases for review and represent an unfavorable alternation, proclaimed leading to a disadvantageous outcome [@WHO2009],[@Evans2009]. Set audit filters are for instance systolic blood pressure under 90, Glasgow Coma Scale less than 9 and not intubated, time to acute intervention more than 60 minutes and a few more. A systematic review of audit filters in 2009 found no studies meeting set criteria determining the effectiveness of set audit filters [@Evans2009]. 
 
-To this day trauma quality improvement programs rely on set filters for the selection of cases for M&M conferences. Some studies have found no major opportunities for improvement in currently used audit filters and believe further advancements are essential [@Cryer1996],[@Copes1995]. We hypothesize that the selection of cases for multidisciplinary mortality and morbidity reviews can be refined by the usage of other factors. We aim therefore to find factors associated with improvement in trauma care for later development of models trained to identify cases with capacity for improvement. This can be investigated by the examination of many other factors registered in our database.
+To this day trauma quality improvement programs rely on set filters for the selection of cases for M&M conferences. Some studies have found no major opportunities for improvement in currently used audit filters and believe further advancements are essential [@Cryer1996],[@Copes1995]. We hypothesize that the selection of cases for multidisciplinary mortality and morbidity reviews can be refined by the usage of other factors. We aim therefore to find factors associated with opportunities for improvement in trauma care for later development of models trained to identify cases with capacity for improvement. This can be investigated by the examination of many other factors registered in our database.
 
 # Methods
 
 ### Study design
 
-Using a trauma registry and a trauma care quality database from Karolinska University Hospital in Solna, Sweden, will we create a registry based cohort study. Only about ten percent of the patients included in the trauma registry are also included in the trauma care quality database, since it is a subset of the registry for patients selected for review. Comparison of the two databases will be made to obtain factors that are correlated to improvement in trauma care.
+Using SweTrau, a trauma registry and its subset trauma care quality database from Karolinska University Hospital in Solna, Sweden, will we create a registry based cohort study. The trauma care quality database consists of the cases selected for review and the presence of opportunity for improvement is noted. Correlation between the two databases is identified to obtain factors associated with opportunities for improvement. 
 
 ### Setting
 
-As previously mentioned trauma care is one of the most prevalent causes for admission and dedicated trauma teams are of utter importance to provide the best care possible. Therefore trauma patients are directly transported to a hospital with such competence in Sweden. Karolinska University Hospital provide care for all trauma patients in Stockholm, and include trauma patients in two different databases.
+In Sweden, prehospital care is managed by paramedics and emergency physicians trained in Prehospital- and Advanced Trauma Life Support (PHTLS/ATLS). When stabilized, trauma patients are transported to hospitals with dedicated trauma teams and sufficient competence. These teams consist of a trauma surgeon, an anesthetist, an orthopedic surgeon, a radiologist and specialized nurses. Karolinska University Hospital in Solna is a level one trauma center, with direct access to radiology, operation and interventions [@Social2015],[@NKS2020].
 
-21 000 patients are included in the trauma registry and 2 200 of which are also included in the trauma care quality database, those patients were selected for review. All the patients included in the trauma registry are treated between 2012 and 2021. The trauma care quality database include opportunities for improvement as the main outcome and is defined as yes or no, identified by multidisciplinary review boards.
-
-Since our aim is to identify factors associated with improvement in trauma care, the database used will therefore have some factors that can be further examined. The information registered in the database is divided into sections. First of all the transportation is included, the time taken from reported trauma until the patient arrives at the hospital. Demographics, including age and gender. Vital signs such as blood pressure, respiratory rate, saturation, pulse, temperature and also Glasgow coma scale upon arrival [@Swetrau2020]. Glasgow coma scale is a assessment used to determine the conscious level of the patient and if there is a probability of neurological damage [@Teasdale2014]. The types of injuries acquired and the mechanism of the trauma. Procedures performed on the patient are also included [@Swetrau2020].
-
+All data used in this study is provided from the mentioned databases. The trauma care quality database includes opportunities for improvement as the main outcome and is defined as yes or no, identified by multidisciplinary review boards. Many other factors from the databases are included and examined.
 
 ### Participants
 
-The main criteria for the patients is that they are included in the trauma registry and were treated between 2012 and 2021. The data is retrieved from Karolinska University Hospital. Since our aim is to only identify factors associated with opportunities for improvement in adult trauma patients, younger patients will be excluded. The age cut-off is set at ≥15, meaning only patients 15 years old and older and included. It is set at 15 since patients at that age are treated by the adult trauma team in Sweden. Many guidelines referred to by the American College of Surgeons Committee also include the same age criteria [@Committee2013].
+SweTrau is the used registry including two different databases derived from Karolinska University Hospital. The trauma registry includes 21 000 patients and the trauma care quality database includes 2 200 patients, all selected from the trauma registry for review. All the patients included in the trauma registry are treated between 2012 and 2021. Since our aim is to only identify factors associated with opportunities for improvement in adult trauma patients, younger patients will be excluded. The age cut-off is set at ≥15, meaning only patients 15 years old and older and included. It is set at 15 since patients at that age are treated by the adult trauma team in Sweden. Many guidelines referred to by the American College of Surgeons Committee also include the same age criteria [@Committee2013].
 
 ### Variables
 
@@ -48,7 +45,7 @@ The two different databases will be compared to determine factors associated wit
 
 **Predictors**
 
-As previously mentioned some predictors will be used to link the two databases. Those predictors include: Demographics, including gender and age, vital signs, Glasgow coma scale, injuries acquired and procedures performed upon patient. All of these factors are already included in the trauma registry.
+Since our aim is to identify factors associated with improvement in trauma care, the database used will therefore have some factors that can be further examined. The information registered in the database is divided into sections. First of all the transportation is included, the time taken from reported trauma until the patient arrives at the hospital. Demographics, including age and gender. Vital signs such as blood pressure, respiratory rate, saturation, pulse, temperature and also Glasgow coma scale upon arrival. The types of injuries acquired and the mechanism of the trauma. Procedures performed on the patient are also included and many more [@Swetrau2020].
 
 ### Data sources and measurements
 
