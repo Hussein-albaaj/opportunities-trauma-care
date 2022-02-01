@@ -74,6 +74,7 @@ We will include all patients the from the Karolinska University Hospital trauma 
 Such variable include vital signs. Pulse, Blood pressure, temperature and respiratory rate. Glasgow coma scale as previously described. All registered to the databases.
 
 ### Statistical methods
+
 We did a complete case analysis of all patients in the Karolinska trauma care quality registry. Variables was handled and converted in accordance with the SweTrau Manual. Potential variables was selected based on currently used audit filters, expert consensus and common demographics. Bivariate and multivariable logistic regression was used to determine significant correlation with the presense of oportunity for improvement. A p value of less then 0,05 was considered significant.
 
 # References
