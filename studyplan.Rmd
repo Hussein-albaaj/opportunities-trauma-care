@@ -49,7 +49,7 @@ The two different databases will be compared to determine factors associated wit
 
 **Predictors**
 
-Since our aim is to identify factors associated with improvement in trauma care, the database used will therefore have some factors that can be further examined. The information registered in the database is divided into sections. First of all the transportation is included, the time taken from reported trauma until the patient arrives at the hospital. Demographics, including age and gender. Vital signs such as blood pressure, respiratory rate, saturation, pulse, temperature and also Glasgow coma scale upon arrival. The types of injuries acquired and the mechanism of the trauma. Procedures performed on the patient are also included and many more [@Swetrau2020].
+Since our aim is to identify factors associated with improvement in trauma care, the database used will therefore have some factors that can be further examined. The information registered in the database is divided into sections.[@Swetrau2020] Selected factors to be further examined are divided into categorical and continuous variables. The categorical variables consists of gender, if the patient is deceased, highest hospital care level and intubation of the patient. The continuous variables consists of age, Injury Severity Score (ISS), Glasgow Coma Scale (GCS), respiratory rate, systolic blood pressure, time from arrival at the hospital until first CT and time from arrival at the hospital until first intervention.
 
 ### Data sources and measurements
 
@@ -61,14 +61,20 @@ Since this is not a blinded study it is of utter importance to acknowledge the r
 
 ### Study size
 
-The patients included are all from the databases previously mentioned. The trauma registry includes around 21 000 patients, all treated between 2012 and 2021. The trauma care quality database is a subset of the registry and includes about 2 200 of the patients from the registry. The cases in the trauma care quality database have been reviewed by professionals and our outcome of opportunities for improvement is included. 
+The patients included are all from the databases previously mentioned. The trauma registry includes around 21 000 patients, all treated between 2012 and 2021. The trauma care quality database is a subset of the registry and includes about 2 200 of the patients from the registry. The cases in the trauma care quality database have been reviewed by professionals and our outcome of opportunities for improvement is included. Patients with missing data or under the age of 15 will be excluded.
 
 ### Quantitive variables
 
-Such variable include vital signs. Pulse, Blood pressure, temperature and respiratory rate. Glasgow coma scale as previously described. All registered to the databases.
+Such variables include age, blood pressure, respiratory rate, ISS, GCS and time to CT and intervention as previously described. All registered to the databases.
 
 ### Statistical methods
 
+Using the programming language R, the necessary data will be collected from Swetrau and combined in a new data set with previously mentioned variables. Patients not matching our criteria and with missing data will be excluded. The analysis model will be developed on scrambled data, meaning all the registered data will be shuffled between all the patients and the later on implemented on the collected data. This is done to decrease the risk of bias. 
+
+The outcome is opportunity for improvement, registered as problematic field on Swetrau. The data will be converted from the description to either yes or no. Yes meaning there was a problem and an opportunity for improvement in the care is found. No meaning there were no distinct problem found in the care of the patient. The analysis of all of the variables unadjusted and adjusted are made through logistic regression. This is done to control for confounding factors and determine any interactions between set variables.
+
+Missing data in any of the used factors will lead to exclusion. However patients intubated before arrival at the hospital are registered in the database as 99 in both GCS and respiratory rate upon arrival at the hospital. Those can not be excluded since the variable intubation is part of the study and needs to be examined. Assumptions are made to include said patients. The verbal response for those patients that are intubated before arrival is assumed to be 1, the lowest in the category indicating no verbal response. This however indicate that the GCS of mentioned patients should be between three and eleven.-----
+To replace 99 as respiratory rate used for intubated patients before arrival at the hospital we determined that the most reasonable solution would be to use the median value of the respiratory rate in all of the other patients.
 
 
 # References
