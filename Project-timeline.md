@@ -40,9 +40,6 @@
 ## Week 15 (2022-04-25 - 2022-04-29)
 - Draft and upload final project paper.
 
-## Week 16
-- Revise final project paper and upload a second version.
-
 ## Week 16 (2022-05-02 - 2022-05-06)
 - Revise final project paper and upload a second version.
 
