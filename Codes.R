@@ -5,7 +5,6 @@ swetrau$intub <- with(swetrau, ifelse(`pre_intubated` == 1 & is.na(swetrau$pre_i
 # Förklaring: tub<- om pre inte är Na och är 1(ja), sant: konvertera till 3, Falskt: använd ed_intubated (1 är ja och 2 är nej)
 
 
-
 # Gör om blodtryck till RTS, måste klickas i ordning.
 library(dplyr)
 
@@ -77,12 +76,10 @@ ki$pre_gcs_sum[ki$pre_gcs_sum==350]<-5
 ki$pre_gcs_sum[ki$pre_gcs_sum==999]<-5
 
 
-
 # Skapa gcs_sum som blir vår nya gcs, 5=missing
 ki$gc<-with(ki, ifelse(intub == 3 & pre_gcs_sum !=5,pre_gcs_sum,ed_gcs_sum))
-ki$gcs<-with(ki, ifelse(intub == 1 | intub == 3 & gc ==5,99,gc))
-
-# Kanske inte ska användas????? ifall intub har na gcs så använder den pre_gcs ki$gcs_sum<-with(ki, ifelse(intub == 1 & gcs ==5,pre_gcs_sum,gcs))
+ki$gcs<-with(ki, ifelse(intub == 1 & gc ==5,99,gc))
+ki$gcs_sum<-with(ki, ifelse(intub == 3 & gc ==5,99,gcs))
 
 
 # Lägg till problemområde
@@ -120,4 +117,39 @@ summary(nks)
 data.frame(table(nks$probYN))
 with(nks,sum(is.na(nks$probYN)))
 
+ks<-na.omit(nks)
+summary(ks)
+aa<-subset(ks,ks$res_survival!=999)
+data.frame(table(aa$probYN))
 
+
+# Logistic regression
+
+str(aa)
+aa$probYN<-as.factor(aa$probYN)
+aa$Gender<-as.factor(aa$Gender)
+aa$host_care_level<-as.factor(aa$host_care_level)
+aa$intub<-as.factor(aa$intub)
+aa$res_survival<-as.factor(aa$res_survival)
+
+pairs(aa,col=aa$probYN)
+
+sex<-glm(probYN~Gender,data = aa,family = 'binomial')
+summary(sex)
+
+surv<-glm(probYN~res_survival,data = aa,family = 'binomial')
+summary(surv)
+
+tub<-glm(probYN~intub,data = aa,family = 'binomial')
+summary(tub)
+
+care<-glm(probYN~host_care_level,data = aa,family = 'binomial')
+summary(care)
+
+surv<-glm(probYN~res_survival,data = aa,family = 'binomial')
+summary(surv)
+
+
+logistic<-glm(probYN~.,data = aa,family = 'binomial')
+summary(logistic)
+plot(logistic)
