@@ -79,7 +79,7 @@ ki$pre_gcs_sum[ki$pre_gcs_sum==999]<-5
 # Skapa gcs_sum som blir vår nya gcs, 5=missing
 ki$gc<-with(ki, ifelse(intub == 3 & pre_gcs_sum !=5,pre_gcs_sum,ed_gcs_sum))
 ki$gcs<-with(ki, ifelse(intub == 1 & gc ==5,99,gc))
-ki$gcs_sum<-with(ki, ifelse(intub == 3 & gc ==5,99,gcs))
+ki$gcs_sum<-with(ki, ifelse(intub == 3 & gcs ==5,99,gcs))
 
 
 # Lägg till problemområde
@@ -153,3 +153,73 @@ summary(surv)
 logistic<-glm(probYN~.,data = aa,family = 'binomial')
 summary(logistic)
 plot(logistic)
+
+rm(aa)
+
+
+# Table 1
+
+install.packages("table1")
+library(table1)
+
+aa$probYN <-
+  factor(aa$probYN,
+         levels=c("Yes","No"),
+         labels=c("Opportunity for improvement",
+                  "No opportunity for improvement"))
+
+aa$Gender <-
+  factor(aa$Gender, levels=c("M","K"),
+         labels=c("Male",
+                  "Female"))
+
+aa$res_survival <-
+  factor(aa$res_survival, levels=c("1","2"),
+         labels=c("Dead",
+                  "Alive"))
+
+aa$intub <-
+  factor(aa$intub, levels=c("3","1","2"),
+         labels=c("Pre-hospital Intubation",
+                  "ED Intubation","Not Intubated"))
+
+aa$host_care_level <-
+  factor(aa$host_care_level, levels=c("1","2","3","4","5"),
+         labels=c("ED","Admissioned","Surgical Ward","Specialized ward","ICU"))
+
+aa$sbp_rts <-
+  factor(aa$sbp_rts, levels=c("4","3","2","1","0","5"),
+         labels=c(">89","76-89","50-75","1-49","0","Missing"))
+
+aa$gcs_sum <-
+  factor(aa$gcs_sum, levels=c("3","2","1","5","99"),
+         labels=c("Mild: 13-15","Moderate: 9-12","Severe: 3-8","Missing","Pre-intubated"))
+
+aa$rr_rts <-
+  factor(aa$rr_rts, levels=c("3","4","2","1","0","5"),
+         labels=c(">29","10-29","6-9","1-5","0","Missing"))
+
+# Döp om variablerna
+
+label(aa$ISS)      <- "Injury Severity Score"
+label(aa$Gender)       <- "Gender"
+label(aa$intub)     <- "Intubation"
+label(aa$pt_age_yrs)       <- "Age"
+label(aa$res_survival)       <- "Survival after 30 days"
+label(aa$host_care_level)       <- "Highest hospital care level"
+label(aa$intub)       <- "Intubation"
+label(aa$rr_rts)       <- "Respiratory rate"
+label(aa$sbp_rts)       <- "Systolic Blood Pressure"
+label(aa$gcs_sum)       <- "GCS"
+label(aa$dt_ed_first_ct)       <- "Time to first CT"
+label(aa$dt_ed_emerg_proc)       <- "Time to intervention"
+
+# Ange enhet där det krävs
+
+units(aa$pt_age_yrs)       <- "Years"
+units(aa$dt_ed_first_ct)   <- "minutes"
+units(aa$dt_ed_emerg_proc)   <- "minutes"
+units(aa$sbp_rts)       <- "RTS"
+units(aa$rr_rts)       <- "RTS"
+
+table1(~ Gender + pt_age_yrs + res_survival + host_care_level + intub + ISS + rr_rts + sbp_rts + gcs_sum + dt_ed_first_ct + dt_ed_emerg_proc| probYN, data=aa)
