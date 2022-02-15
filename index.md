@@ -7,11 +7,6 @@ bibliography: citations.bib
 csl: bmcemerg.csl
 link-citations: yes
 
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
 # Introduction
 

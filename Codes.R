@@ -1,9 +1,22 @@
-swetrau<-read.csv('swetrau-scrambled.csv')
+xy<-read.csv('swetrau-scrambled.csv')
 
 # Gör en kolumn med intub: 1, intub ED, 2. Ej intub. 3. Intub prehosp.
-swetrau$intub <- with(swetrau, ifelse(`pre_intubated` == 1 & is.na(swetrau$pre_intubated) == FALSE, 3, `ed_intubated`))
+xy$intub <- with(xy, ifelse(`pre_intubated` == 1 & is.na(xy$pre_intubated) == FALSE, 3, `ed_intubated`))
 # Förklaring: tub<- om pre inte är Na och är 1(ja), sant: konvertera till 3, Falskt: använd ed_intubated (1 är ja och 2 är nej)
 
+install.packages("naniar")
+library(naniar)
+ab<-xy %>% replace_with_na(replace = list( "res_survival" = 999))
+ac<-ab %>% replace_with_na(replace = list( "intub" = 999))
+swetrau<-ac %>% replace_with_na(replace = list( "host_care_level" = 999))
+
+# Egen datafram för räkna missing data
+library(dplyr)
+rak.var<-c("Gender","res_survival","intub","host_care_level","rr_rts","sbp_rts","gcs_sum")
+cont.var<-c("ISS","dt_ed_first_ct","dt_ed_emerg_proc","pt_age_yrs")
+
+
+ba<-select(swetrau,rak.var,cont.var)
 
 # Gör om blodtryck till RTS, måste klickas i ordning.
 library(dplyr)
@@ -20,10 +33,13 @@ swetrau$ed_sbp_value[swetrau$ed_sbp_value==999]<-5
 # Tar RTS värdet från ed, om det inte finns så använder den vanliga blodtrycket, som är grupperat enligt RTS.
 swetrau$sbp_rts<-with(swetrau, ifelse(ed_sbp_rtscat!=999 & is.na(swetrau$ed_sbp_rtscat)==FALSE,ed_sbp_rtscat,ed_sbp_value))
 
+nrow(swetrau[is.na(swetrau$inj_dominant),]+(subset(swetrau,inj_dominant=='999')))
+summary(swetrau$inj_dominant)
+nrow(subset(swetrau,inj_dominant=='999'|is.na(swetrau$inj_dominant)))
+data.frame(table(swetrau$inj_dominant))
 
 # Ta bort missing data från intub
-dat<-swetrau[!is.na(swetrau$intub),]
-ki<-subset(dat,intub!=999)
+ki<-swetrau[!is.na(swetrau$intub),]
 
 
 # Samma med ed_RR
@@ -37,7 +53,7 @@ ki$ed_rr_value[ki$ed_rr_value==99]<-5
 ki$ed_rr_value[ki$ed_rr_value==350]<-5
 ki$ed_rr_value[ki$ed_rr_value==999]<-5
 
-ki$ed_rr_rts<-with(ki, ifelse(is.na(ki$ed_rr_rtscat)==FALSE,ed_rr_rtscat,ed_rr_value))
+ki$ed_rr_rts<-with(ki, ifelse(is.na(ki$ed_rr_rtscat)==FALSE & ed_rr_rtscat != 999,ed_rr_rtscat,ed_rr_value))
 
 
 # Samma med pre_RR
@@ -49,10 +65,11 @@ ki$pre_rr_value[ki$pre_rr_value==99]<-5
 ki$pre_rr_value[ki$pre_rr_value==350]<-5
 ki$pre_rr_value[ki$pre_rr_value==999]<-5
 
-ki$pre_rr_rts<-with(ki, ifelse(is.na(ki$pre_rr_rtscat)==FALSE,pre_rr_rtscat,pre_rr_value))
+ki$pre_rr_rts<-with(ki, ifelse(is.na(ki$pre_rr_rtscat)==FALSE & pre_rr_rtscat != 999,pre_rr_rtscat,pre_rr_value))
 
-ki$rr_rts<-with(ki, ifelse(intub == 3 & pre_rr_rts !=5,pre_rr_rts,ed_rr_rts))
+ki$rr_rts<-with(ki, ifelse(intub == 3 & pre_rr_rts !=5 & pre_rr_rtscat != 999,pre_rr_rts,ed_rr_rts))
 
+ki$rr_rts[ki$rr_rts==999]<-5
 
 # Konvertera GCS till mild 13-15 (3), moderate 9-12 (2), severe 3-8. (1). 5 = MISSING
 ki$ed_gcs_sum[is.na(ki$ed_gcs_sum)]<-350
@@ -82,7 +99,7 @@ ki$gcs<-with(ki, ifelse(intub == 1 & gc ==5,99,gc))
 ki$gcs_sum<-with(ki, ifelse(intub == 3 & gcs ==5,99,gcs))
 
 
-# Lägg till problemområde
+# Lägg till problemområde, Lägg till för hand funkar om koden inte gör det.
 
 library(readr)
 problem_scrambled<-read.csv('problem-scrambled.csv')
@@ -108,29 +125,36 @@ nk<-merge(ki,problem_scrambled,by='id')
 cat.var<-c("id","probYN","Gender","res_survival","intub","host_care_level","rr_rts","sbp_rts","gcs_sum")
 cont.var<-c("ISS","dt_ed_first_ct","dt_ed_emerg_proc","pt_age_yrs")
 
-names(nk)[208] <- 'probYN'
+nk$probYN<-nk$`Problemomrade_ FMP`
 
 # Gör en en dataframe (nks) med endast våra variabler.
 library(dplyr)
 nks<-select(nk,cat.var,cont.var)
-summary(nks)
-data.frame(table(nks$probYN))
-with(nks,sum(is.na(nks$probYN)))
 
-ks<-na.omit(nks)
-summary(ks)
-aa<-subset(ks,ks$res_survival!=999)
+nkk<-subset(nks,!(pt_age_yrs%in%c(1,2,3,4,5,6,7,8,9,10,11,12,13,14)))
+
+# Se alla missing values
+summary(nkk)
+
+aa<-na.omit(nkk)
 data.frame(table(aa$probYN))
+
+ae<-aa
 
 
 # Logistic regression
 
+  # Sätt alla cat.var som factor variables
 str(aa)
 aa$probYN<-as.factor(aa$probYN)
 aa$Gender<-as.factor(aa$Gender)
 aa$host_care_level<-as.factor(aa$host_care_level)
 aa$intub<-as.factor(aa$intub)
 aa$res_survival<-as.factor(aa$res_survival)
+aa$rr_rts<-as.factor(aa$rr_rts)
+aa$sbp_rts<-as.factor(aa$sbp_rts)
+aa$gcs_sum<-as.factor(aa$gcs_sum)
+
 
 pairs(aa,col=aa$probYN)
 
@@ -154,7 +178,11 @@ logistic<-glm(probYN~.,data = aa,family = 'binomial')
 summary(logistic)
 plot(logistic)
 
-rm(aa)
+glm.fit=glm(probYN~.,data = aa,family = binomial)
+
+summary(glm.fit)
+plot(glm.fit)
+pairs(aa,col=aa$probYN)
 
 
 # Table 1
@@ -199,6 +227,8 @@ aa$rr_rts <-
   factor(aa$rr_rts, levels=c("3","4","2","1","0","5"),
          labels=c(">29","10-29","6-9","1-5","0","Missing"))
 
+
+
 # Döp om variablerna
 
 label(aa$ISS)      <- "Injury Severity Score"
@@ -222,4 +252,20 @@ units(aa$dt_ed_emerg_proc)   <- "minutes"
 units(aa$sbp_rts)       <- "RTS"
 units(aa$rr_rts)       <- "RTS"
 
-table1(~ Gender + pt_age_yrs + res_survival + host_care_level + intub + ISS + rr_rts + sbp_rts + gcs_sum + dt_ed_first_ct + dt_ed_emerg_proc| probYN, data=aa)
+table1(~ Gender + pt_age_yrs + res_survival + host_care_level + intub + ISS + rr_rts + sbp_rts +
+         gcs_sum + dt_ed_first_ct + dt_ed_emerg_proc| probYN, data=aa)
+
+
+
+
+# Flow chart
+
+install.packages("PRISMAstatement")
+library(PRISMAstatement)
+
+flow_exclusions(
+  incl_counts = c(nrow(xy),nrow(ki), nrow(nks), nrow(nkk),nrow(aa)),
+  total_label = "Patients in the trauma registry",
+  incl_labels = c("Intubation-status known", "Outcome identified", "Matching set criteria","Included in the study"),
+  excl_labels = c("Intubation-status unknown", "Outcome unidentified", "Not meeting age criteria", "Missing value")
+)
