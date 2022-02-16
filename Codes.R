@@ -10,14 +10,6 @@ ab<-xy %>% replace_with_na(replace = list( "res_survival" = 999))
 ac<-ab %>% replace_with_na(replace = list( "intub" = 999))
 swetrau<-ac %>% replace_with_na(replace = list( "host_care_level" = 999))
 
-# Egen datafram för räkna missing data
-library(dplyr)
-rak.var<-c("Gender","res_survival","intub","host_care_level","rr_rts","sbp_rts","gcs_sum")
-cont.var<-c("ISS","dt_ed_first_ct","dt_ed_emerg_proc","pt_age_yrs")
-
-
-ba<-select(swetrau,rak.var,cont.var)
-
 # Gör om blodtryck till RTS, måste klickas i ordning.
 library(dplyr)
 
@@ -38,66 +30,74 @@ summary(swetrau$inj_dominant)
 nrow(subset(swetrau,inj_dominant=='999'|is.na(swetrau$inj_dominant)))
 data.frame(table(swetrau$inj_dominant))
 
-# Ta bort missing data från intub
-ki<-swetrau[!is.na(swetrau$intub),]
-
-
 # Samma med ed_RR
-ki$ed_rr_value[is.na(ki$ed_rr_value)]<-350
+swetrau$ed_rr_value[is.na(swetrau$ed_rr_value)]<-350
 
-ki$ed_rr_value[ki$ed_rr_value>=1 & ki$ed_rr_value<=5]<-1
-ki$ed_rr_value[ki$ed_rr_value>=6 & ki$ed_rr_value<=9]<-2
-ki$ed_rr_value[ki$ed_rr_value>=10 & ki$ed_rr_value<=29]<-4
-ki$ed_rr_value[ki$ed_rr_value>29 & ki$ed_rr_value<=70]<-3
-ki$ed_rr_value[ki$ed_rr_value==99]<-5
-ki$ed_rr_value[ki$ed_rr_value==350]<-5
-ki$ed_rr_value[ki$ed_rr_value==999]<-5
+swetrau$ed_rr_value[swetrau$ed_rr_value>=1 & swetrau$ed_rr_value<=5]<-1
+swetrau$ed_rr_value[swetrau$ed_rr_value>=6 & swetrau$ed_rr_value<=9]<-2
+swetrau$ed_rr_value[swetrau$ed_rr_value>=10 & swetrau$ed_rr_value<=29]<-4
+swetrau$ed_rr_value[swetrau$ed_rr_value>29 & swetrau$ed_rr_value<=70]<-3
+swetrau$ed_rr_value[swetrau$ed_rr_value==99]<-5
+swetrau$ed_rr_value[swetrau$ed_rr_value==350]<-5
+swetrau$ed_rr_value[swetrau$ed_rr_value==999]<-5
 
-ki$ed_rr_rts<-with(ki, ifelse(is.na(ki$ed_rr_rtscat)==FALSE & ed_rr_rtscat != 999,ed_rr_rtscat,ed_rr_value))
+swetrau$ed_rr_rts<-with(swetrau, ifelse(is.na(swetrau$ed_rr_rtscat)==FALSE & ed_rr_rtscat != 999,ed_rr_rtscat,ed_rr_value))
 
 
 # Samma med pre_RR
-ki$pre_rr_value[ki$pre_rr_value>=1 & ki$pre_rr_value<=5]<-1
-ki$pre_rr_value[ki$pre_rr_value>=6 & ki$pre_rr_value<=9]<-2
-ki$pre_rr_value[ki$pre_rr_value>=10 & ki$pre_rr_value<=29]<-4
-ki$pre_rr_value[ki$pre_rr_value>29 & ki$pre_rr_value<=70]<-3
-ki$pre_rr_value[ki$pre_rr_value==99]<-5
-ki$pre_rr_value[ki$pre_rr_value==350]<-5
-ki$pre_rr_value[ki$pre_rr_value==999]<-5
+swetrau$pre_rr_value[swetrau$pre_rr_value>=1 & swetrau$pre_rr_value<=5]<-1
+swetrau$pre_rr_value[swetrau$pre_rr_value>=6 & swetrau$pre_rr_value<=9]<-2
+swetrau$pre_rr_value[swetrau$pre_rr_value>=10 & swetrau$pre_rr_value<=29]<-4
+swetrau$pre_rr_value[swetrau$pre_rr_value>29 & swetrau$pre_rr_value<=70]<-3
+swetrau$pre_rr_value[swetrau$pre_rr_value==99]<-5
+swetrau$pre_rr_value[swetrau$pre_rr_value==350]<-5
+swetrau$pre_rr_value[swetrau$pre_rr_value==999]<-5
 
-ki$pre_rr_rts<-with(ki, ifelse(is.na(ki$pre_rr_rtscat)==FALSE & pre_rr_rtscat != 999,pre_rr_rtscat,pre_rr_value))
+swetrau$pre_rr_rts<-with(swetrau, ifelse(is.na(swetrau$pre_rr_rtscat)==FALSE & pre_rr_rtscat != 999,pre_rr_rtscat,pre_rr_value))
 
-ki$rr_rts<-with(ki, ifelse(intub == 3 & pre_rr_rts !=5 & pre_rr_rtscat != 999,pre_rr_rts,ed_rr_rts))
+swetrau$rr_rts<-with(swetrau, ifelse(intub == 3 & pre_rr_rts !=5 & pre_rr_rtscat != 999,pre_rr_rts,ed_rr_rts))
 
-ki$rr_rts[ki$rr_rts==999]<-5
+swetrau$rr_rts[swetrau$rr_rts==999]<-5
 
 # Konvertera GCS till mild 13-15 (3), moderate 9-12 (2), severe 3-8. (1). 5 = MISSING
-ki$ed_gcs_sum[is.na(ki$ed_gcs_sum)]<-350
+swetrau$ed_gcs_sum[is.na(swetrau$ed_gcs_sum)]<-350
 
-ki$ed_gcs_sum[ki$ed_gcs_sum>=3 & ki$ed_gcs_sum<=8]<-1
-ki$ed_gcs_sum[ki$ed_gcs_sum>=9 & ki$ed_gcs_sum<=12]<-2
-ki$ed_gcs_sum[ki$ed_gcs_sum>=13 & ki$ed_gcs_sum<=15]<-3
-ki$ed_gcs_sum[ki$ed_gcs_sum==99]<-5
-ki$ed_gcs_sum[ki$ed_gcs_sum==350]<-5
-ki$ed_gcs_sum[ki$ed_gcs_sum==999]<-5
+swetrau$ed_gcs_sum[swetrau$ed_gcs_sum>=3 & swetrau$ed_gcs_sum<=8]<-1
+swetrau$ed_gcs_sum[swetrau$ed_gcs_sum>=9 & swetrau$ed_gcs_sum<=12]<-2
+swetrau$ed_gcs_sum[swetrau$ed_gcs_sum>=13 & swetrau$ed_gcs_sum<=15]<-3
+swetrau$ed_gcs_sum[swetrau$ed_gcs_sum==99]<-5
+swetrau$ed_gcs_sum[swetrau$ed_gcs_sum==350]<-5
+swetrau$ed_gcs_sum[swetrau$ed_gcs_sum==999]<-5
 
 
 # Gör samma med pre_GCS
-ki$pre_gcs_sum[is.na(ki$pre_gcs_sum)]<-350
+swetrau$pre_gcs_sum[is.na(swetrau$pre_gcs_sum)]<-350
 
-ki$pre_gcs_sum[ki$pre_gcs_sum>=3 & ki$pre_gcs_sum<=8]<-1
-ki$pre_gcs_sum[ki$pre_gcs_sum>=9 & ki$pre_gcs_sum<=12]<-2
-ki$pre_gcs_sum[ki$pre_gcs_sum>=13 & ki$pre_gcs_sum<=15]<-3
-ki$pre_gcs_sum[ki$pre_gcs_sum==99]<-5
-ki$pre_gcs_sum[ki$pre_gcs_sum==350]<-5
-ki$pre_gcs_sum[ki$pre_gcs_sum==999]<-5
+swetrau$pre_gcs_sum[swetrau$pre_gcs_sum>=3 & swetrau$pre_gcs_sum<=8]<-1
+swetrau$pre_gcs_sum[swetrau$pre_gcs_sum>=9 & swetrau$pre_gcs_sum<=12]<-2
+swetrau$pre_gcs_sum[swetrau$pre_gcs_sum>=13 & swetrau$pre_gcs_sum<=15]<-3
+swetrau$pre_gcs_sum[swetrau$pre_gcs_sum==99]<-5
+swetrau$pre_gcs_sum[swetrau$pre_gcs_sum==350]<-5
+swetrau$pre_gcs_sum[swetrau$pre_gcs_sum==999]<-5
 
 
 # Skapa gcs_sum som blir vår nya gcs, 5=missing
-ki$gc<-with(ki, ifelse(intub == 3 & pre_gcs_sum !=5,pre_gcs_sum,ed_gcs_sum))
-ki$gcs<-with(ki, ifelse(intub == 1 & gc ==5,99,gc))
-ki$gcs_sum<-with(ki, ifelse(intub == 3 & gcs ==5,99,gcs))
+swetrau$gc<-with(swetrau, ifelse(intub == 3 & pre_gcs_sum !=5,pre_gcs_sum,ed_gcs_sum))
+swetrau$gcs<-with(swetrau, ifelse(intub == 1 & gc ==5,99,gc))
+swetrau$gcs_sum<-with(swetrau, ifelse(intub == 3 & gcs ==5,99,gcs))
 
+
+# Egen datafram för räkna missing data
+library(dplyr)
+rak.var<-c("Gender","intub","res_survival","host_care_level","rr_rts","sbp_rts","gcs_sum")
+cont.var<-c("ISS","dt_ed_first_ct","dt_ed_emerg_proc","pt_age_yrs")
+
+ba<-select(swetrau,rak.var,cont.var)
+
+with(ba,sum(is.na(res_survival)))
+
+# Ta bort missing data från intub
+ki<-swetrau[!is.na(swetrau$intub),]
 
 # Lägg till problemområde, Lägg till för hand funkar om koden inte gör det.
 
@@ -145,44 +145,64 @@ ae<-aa
 # Logistic regression
 
   # Sätt alla cat.var som factor variables
-str(aa)
-aa$probYN<-as.factor(aa$probYN)
-aa$Gender<-as.factor(aa$Gender)
-aa$host_care_level<-as.factor(aa$host_care_level)
-aa$intub<-as.factor(aa$intub)
-aa$res_survival<-as.factor(aa$res_survival)
-aa$rr_rts<-as.factor(aa$rr_rts)
-aa$sbp_rts<-as.factor(aa$sbp_rts)
-aa$gcs_sum<-as.factor(aa$gcs_sum)
+str(ae)
+ae$probYN<-as.factor(ae$probYN)
+ae$Gender<-as.factor(ae$Gender)
+ae$host_care_level<-as.factor(ae$host_care_level)
+ae$intub<-as.factor(ae$intub)
+ae$res_survival<-as.factor(ae$res_survival)
+ae$rr_rts<-as.factor(ae$rr_rts)
+ae$sbp_rts<-as.factor(ae$sbp_rts)
+ae$gcs_sum<-as.factor(ae$gcs_sum)
 
 
-pairs(aa,col=aa$probYN)
+# Rita ut alla grafer
+pairs(ae,col=ae$probYN)
 
-sex<-glm(probYN~Gender,data = aa,family = 'binomial')
+
+# Logistic regression på variabler för sig
+sex<-glm(probYN~Gender,data = ae,family = 'binomial')
 summary(sex)
 
-surv<-glm(probYN~res_survival,data = aa,family = 'binomial')
+surv<-glm(probYN~res_survival,data = ae,family = 'binomial')
 summary(surv)
 
-tub<-glm(probYN~intub,data = aa,family = 'binomial')
+tub<-glm(probYN~intub,data = ae,family = 'binomial')
 summary(tub)
 
-care<-glm(probYN~host_care_level,data = aa,family = 'binomial')
+care<-glm(probYN~host_care_level,data = ae,family = 'binomial')
 summary(care)
 
-surv<-glm(probYN~res_survival,data = aa,family = 'binomial')
-summary(surv)
+resp<-glm(probYN~rr_rts,data = ae,family = 'binomial')
+summary(resp)
 
+sysbp<-glm(probYN~sbp_rts,data = ae,family = 'binomial')
+summary(sysbp)
 
-logistic<-glm(probYN~.,data = aa,family = 'binomial')
+gcs_var<-glm(probYN~gcs_sum,data = ae,family = 'binomial')
+summary(gcs_var)
+
+injury<-glm(probYN~ISS,data = ae,family = 'binomial')
+summary(injury)
+
+first_ct<-glm(probYN~dt_ed_first_ct,data = ae,family = 'binomial')
+summary(first_ct)
+
+first_proc<-glm(probYN~dt_ed_emerg_proc,data = ae,family = 'binomial')
+summary(first_proc)
+
+age<-glm(probYN~pt_age_yrs,data = ae,family = 'binomial')
+summary(age)
+
+logistic<-glm(probYN~.,data = ae,family = 'binomial')
 summary(logistic)
 plot(logistic)
 
-glm.fit=glm(probYN~.,data = aa,family = binomial)
+glm.fit=glm(probYN~.,data = ae,family = binomial)
 
 summary(glm.fit)
 plot(glm.fit)
-pairs(aa,col=aa$probYN)
+pairs(ae,col=ae$probYN)
 
 
 # Table 1
