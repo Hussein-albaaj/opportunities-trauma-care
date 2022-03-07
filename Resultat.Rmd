@@ -23,8 +23,6 @@ You can also embed plots, for example:
 
 ```{r pressure, echo=FALSE}
 
-xy<-read.csv('swetrau-scrambled.csv')
-
 # Gör en kolumn med intub: 1, intub ED, 2. Ej intub. 3. Intub prehosp.
 xy$intub <- with(xy, ifelse(`pre_intubated` == 1 & is.na(xy$pre_intubated) == FALSE, 3, `ed_intubated`))
 # Förklaring: tub<- om pre inte är Na och är 1(ja), sant: konvertera till 3, Falskt: använd ed_intubated (1 är ja och 2 är nej)
@@ -306,7 +304,10 @@ flow_exclusions(
   excl_labels = c("Intubation-status unknown", "Outcome unidentified", "Not meeting age criteria", "Missing value")
 )
 
+
 ```
+
+
 
 ```{r}
 if (!require("BiocManager", quietly = TRUE))
