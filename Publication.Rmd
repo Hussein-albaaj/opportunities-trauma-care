@@ -1,5 +1,5 @@
 ---
-title: "Study plan"
+title: "Factors associated with opportunities for improvement in trauma care"
 output:
 #  word_document: default
  # pdf_document: default
@@ -12,19 +12,30 @@ link-citations: yes
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-
 ```{r include=FALSE}
+library(readr)
 xy<-read.csv('swetrau-scrambled.csv')
 
+# Gör en kolumn med intub: 1, intub ED, 2. Ej intub. 3. Intub prehosp.
 xy$intub <- with(xy, ifelse(`pre_intubated` == 1 & is.na(xy$pre_intubated) == FALSE, 3, `ed_intubated`))
+# Förklaring: tub<- om pre inte är Na och är 1(ja), sant: konvertera till 3, Falskt: använd ed_intubated (1 är ja och 2 är nej)
 
+# Gör om 999 till Na
 library(naniar)
 ab<-xy %>% replace_with_na(replace = list( "res_survival" = 999))
 ac<-ab %>% replace_with_na(replace = list( "intub" = 999))
-swetrau<-ac %>% replace_with_na(replace = list( "host_care_level" = 999))
+ada<-ac %>% replace_with_na(replace = list( "host_care_level" = 999))
+adab<-ada %>% replace_with_na(replace = list( "ed_sbp_rtscat" = 999))
+adac<-adab %>% replace_with_na(replace = list( "ed_rr_rtscat" = 999))
+adad<-adac %>% replace_with_na(replace = list( "pre_rr_rtscat" = 999))
+adae<-adad %>% replace_with_na(replace = list( "ed_sbp_value" = 999))
+adah<-adae %>% replace_with_na(replace = list( "ed_rr_value" = 999))
+adag<-adah %>% replace_with_na(replace = list( "pre_rr_value" = 999))
+adaj<-adag %>% replace_with_na(replace = list( "ed_gcs_sum" = 999))
+swetrau<-adaj %>% replace_with_na(replace = list( "pre_gcs_sum" = 999))
 
+# Gör om blodtryck till RTS
 library(dplyr)
-
 swetrau$ed_sbp_value[is.na(swetrau$ed_sbp_value)]<-350
 
 swetrau$ed_sbp_value[swetrau$ed_sbp_value>=1 & swetrau$ed_sbp_value<=49]<-1
@@ -32,10 +43,11 @@ swetrau$ed_sbp_value[swetrau$ed_sbp_value>=50 & swetrau$ed_sbp_value<=75]<-2
 swetrau$ed_sbp_value[swetrau$ed_sbp_value>=76 & swetrau$ed_sbp_value<=89]<-3
 swetrau$ed_sbp_value[swetrau$ed_sbp_value>89 & swetrau$ed_sbp_value<=298]<-4
 swetrau$ed_sbp_value[swetrau$ed_sbp_value==350]<-5
-swetrau$ed_sbp_value[swetrau$ed_sbp_value==999]<-5
 
-swetrau$sbp_rts<-with(swetrau, ifelse(ed_sbp_rtscat!=999 & is.na(swetrau$ed_sbp_rtscat)==FALSE,ed_sbp_rtscat,ed_sbp_value))
+# Tar RTS värdet från ed, om det inte finns så använder den vanliga blodtrycket, som är grupperat enligt RTS.
+swetrau$sbp_rts<-with(swetrau, ifelse(is.na(swetrau$ed_sbp_rtscat)==FALSE,ed_sbp_rtscat,ed_sbp_value))
 
+# Samma med ed_RR
 swetrau$ed_rr_value[is.na(swetrau$ed_rr_value)]<-350
 
 swetrau$ed_rr_value[swetrau$ed_rr_value>=1 & swetrau$ed_rr_value<=5]<-1
@@ -44,33 +56,31 @@ swetrau$ed_rr_value[swetrau$ed_rr_value>=10 & swetrau$ed_rr_value<=29]<-4
 swetrau$ed_rr_value[swetrau$ed_rr_value>29 & swetrau$ed_rr_value<=70]<-3
 swetrau$ed_rr_value[swetrau$ed_rr_value==99]<-5
 swetrau$ed_rr_value[swetrau$ed_rr_value==350]<-5
-swetrau$ed_rr_value[swetrau$ed_rr_value==999]<-5
 
-swetrau$ed_rr_rts<-with(swetrau, ifelse(is.na(swetrau$ed_rr_rtscat)==FALSE & ed_rr_rtscat != 999,ed_rr_rtscat,ed_rr_value))
+swetrau$ed_rr_rts<-with(swetrau, ifelse(is.na(swetrau$ed_rr_rtscat)==FALSE,ed_rr_rtscat,ed_rr_value))
 
+# Samma med pre_RR
 swetrau$pre_rr_value[swetrau$pre_rr_value>=1 & swetrau$pre_rr_value<=5]<-1
 swetrau$pre_rr_value[swetrau$pre_rr_value>=6 & swetrau$pre_rr_value<=9]<-2
 swetrau$pre_rr_value[swetrau$pre_rr_value>=10 & swetrau$pre_rr_value<=29]<-4
 swetrau$pre_rr_value[swetrau$pre_rr_value>29 & swetrau$pre_rr_value<=70]<-3
 swetrau$pre_rr_value[swetrau$pre_rr_value==99]<-5
 swetrau$pre_rr_value[swetrau$pre_rr_value==350]<-5
-swetrau$pre_rr_value[swetrau$pre_rr_value==999]<-5
 
-swetrau$pre_rr_rts<-with(swetrau, ifelse(is.na(swetrau$pre_rr_rtscat)==FALSE & pre_rr_rtscat != 999,pre_rr_rtscat,pre_rr_value))
+swetrau$pre_rr_rts<-with(swetrau, ifelse(is.na(swetrau$pre_rr_rtscat)==FALSE ,pre_rr_rtscat,pre_rr_value))
 
-swetrau$rr_rts<-with(swetrau, ifelse(intub == 3 & pre_rr_rts !=5 & pre_rr_rtscat != 999,pre_rr_rts,ed_rr_rts))
-
-swetrau$rr_rts[swetrau$rr_rts==999]<-5
+swetrau$rr_rts<-with(swetrau, ifelse(intub == 3 & pre_rr_rts !=5,pre_rr_rts,ed_rr_rts))
 
 swetrau$ed_gcs_sum[is.na(swetrau$ed_gcs_sum)]<-350
 
+# Konvertera GCS till mild 13-15 (3), moderate 9-12 (2), severe 3-8. (1). 5 = MISSING
 swetrau$ed_gcs_sum[swetrau$ed_gcs_sum>=3 & swetrau$ed_gcs_sum<=8]<-1
 swetrau$ed_gcs_sum[swetrau$ed_gcs_sum>=9 & swetrau$ed_gcs_sum<=12]<-2
 swetrau$ed_gcs_sum[swetrau$ed_gcs_sum>=13 & swetrau$ed_gcs_sum<=15]<-3
 swetrau$ed_gcs_sum[swetrau$ed_gcs_sum==99]<-5
 swetrau$ed_gcs_sum[swetrau$ed_gcs_sum==350]<-5
-swetrau$ed_gcs_sum[swetrau$ed_gcs_sum==999]<-5
 
+# Gör samma med pre_GCS
 swetrau$pre_gcs_sum[is.na(swetrau$pre_gcs_sum)]<-350
 
 swetrau$pre_gcs_sum[swetrau$pre_gcs_sum>=3 & swetrau$pre_gcs_sum<=8]<-1
@@ -78,47 +88,63 @@ swetrau$pre_gcs_sum[swetrau$pre_gcs_sum>=9 & swetrau$pre_gcs_sum<=12]<-2
 swetrau$pre_gcs_sum[swetrau$pre_gcs_sum>=13 & swetrau$pre_gcs_sum<=15]<-3
 swetrau$pre_gcs_sum[swetrau$pre_gcs_sum==99]<-5
 swetrau$pre_gcs_sum[swetrau$pre_gcs_sum==350]<-5
-swetrau$pre_gcs_sum[swetrau$pre_gcs_sum==999]<-5
 
+# Skapa gcs_sum som blir vår nya gcs, 5=missing
 swetrau$gc<-with(swetrau, ifelse(intub == 3 & pre_gcs_sum !=5,pre_gcs_sum,ed_gcs_sum))
 swetrau$gcs<-with(swetrau, ifelse(intub == 1 & gc ==5,99,gc))
 swetrau$gcs_sum<-with(swetrau, ifelse(intub == 3 & gcs ==5,99,gcs))
 
+# Egen datafram för räkna missing data
 library(dplyr)
-rak.var<-c("Gender","intub","res_survival","host_care_level","rr_rts","sbp_rts","gcs_sum")
+fake.var<-c("Gender","res_survival","intub","host_care_level","rr_rts","sbp_rts","gcs_sum")
+rak.var<-c("id","Gender","res_survival","intub","host_care_level","rr_rts","sbp_rts","gcs_sum")
 cont.var<-c("ISS","dt_ed_first_ct","dt_ed_emerg_proc","pt_age_yrs")
+cat.var<-c("probYN","Gender","res_survival","intub","host_care_level","rr_rts","sbp_rts","gcs_sum")
 
+# Gör ny dataframe för att räkna missing data
 ba<-select(swetrau,rak.var,cont.var)
+kl<-select(swetrau,fake.var,cont.var)
+na.kl<-na.omit(kl)
 
-with(ba,sum(is.na(res_survival)))
-
-ki<-swetrau[!is.na(swetrau$intub),]
-
+# Lägg till problemområde och gör om till probYN
 library(readr)
-
 problem_scrambled<-read.csv('problem-scrambled.csv')
+names(problem_scrambled)[names(problem_scrambled) == 'Problemomrade_.FMP'] <- 'probYN'
 
-rename(problem_scrambled,probYN=`Problemomrade_.FMP`)
+problem_scrambled$probYN <- with(problem_scrambled, ifelse(`probYN` == 'Ok'| `probYN` == 'FÃ¶redÃ¶mligt handlagd'|
+ `probYN` == 'ok' & is.na(problem_scrambled$probYN) == FALSE, 'Yes', 'No'))
 
-nk<-merge(ki,problem_scrambled,by='id')
+# Sätt ihop databaser
+calc<-merge(ba,problem_scrambled,by='id')
 
-nk$probYN <- with(nk, ifelse(`Problemomrade_.FMP` == 'Ok'| `Problemomrade_.FMP` == 'FÃ¶redÃ¶mligt handlagd'|
- `Problemomrade_.FMP` == 'ok' & is.na(nk$Problemomrade_.FMP) == FALSE, 'Yes', 'No'))
+# Gör dataset för att beräkna på care quality database
 
-cat.var<-c("id","probYN","Gender","res_survival","intub","host_care_level","rr_rts","sbp_rts","gcs_sum")
-cont.var<-c("ISS","dt_ed_first_ct","dt_ed_emerg_proc","pt_age_yrs")
 
+
+# Gör om till Na
+calb<-calc %>% replace_with_na(replace = list('rr_rts'=5))
+cald<-calb %>% replace_with_na(replace = list('sbp_rts'=5))
+cale<-cald %>% replace_with_na(replace = list('gcs_sum'=5))
+calh<-cale %>% replace_with_na(replace = list('pt_age_yrs'=11))
+calj<-calh %>% replace_with_na(replace = list('pt_age_yrs'=13))
+calk<-calj %>% replace_with_na(replace = list('pt_age_yrs'=14))
+sega <- subset(calk,select = -c(Ankomst_te))
+
+library("questionr")
+sew<-as.data.frame(freq.na(sega))
+
+# Ta bort ankomsttid
 library(dplyr)
+nks<-select(calk,cat.var,cont.var)
 
-nks<-select(nk,cat.var,cont.var)
+# Ta bort alla missing data
+ki<- na.omit(nks)
 
-nkk<-subset(nks,!(pt_age_yrs%in%c(1,2,3,4,5,6,7,8,9,10,11,12,13,14)))
+# Kopiera dataframe
+ae<-ki
+aa<-ki
 
-aa<-na.omit(nkk)
-data.frame(table(aa$probYN))
-
-ae<-aa
-
+# Gör om till faktorer
 str(ae)
 ae$probYN<-as.factor(ae$probYN)
 ae$Gender<-as.factor(ae$Gender)
@@ -128,9 +154,15 @@ ae$res_survival<-as.factor(ae$res_survival)
 ae$rr_rts<-as.factor(ae$rr_rts)
 ae$sbp_rts<-as.factor(ae$sbp_rts)
 ae$gcs_sum<-as.factor(ae$gcs_sum)
+ae$ISS<-as.numeric(ae$ISS)
+ae$dt_ed_first_ct<-as.numeric(ae$dt_ed_first_ct)
+ae$dt_ed_emerg_proc<-as.numeric(ae$dt_ed_emerg_proc)
+ae$pt_age_yrs<-as.numeric(ae$pt_age_yrs)
 
+# Ritar ut alla värden på graf
 pairs(ae,col=ae$probYN)
 
+# Resultat för varje variabel, unadjusted
 sex<-glm(probYN~Gender,data = ae,family = 'binomial')
 summary(sex)
 
@@ -164,12 +196,16 @@ summary(first_proc)
 age<-glm(probYN~pt_age_yrs,data = ae,family = 'binomial')
 summary(age)
 
+# Resultat för adjusted variabels
 logistic<-glm(probYN~.,data = ae,family = 'binomial')
 summary(logistic)
 plot(logistic)
 
+plot(pt_age_yrs ~ probYN, data=ae, col="steelblue")
+
 glm.fit=glm(probYN~.,data = ae,family = binomial)
 
+# Table 1
 library(table1)
 
 aa$probYN <-
@@ -209,6 +245,7 @@ aa$rr_rts <-
   factor(aa$rr_rts, levels=c("3","4","2","1","0","5"),
          labels=c(">29","10-29","6-9","1-5","0","Missing"))
 
+label(aa$probYN)      <- "Outcome"
 label(aa$ISS)      <- "Injury Severity Score"
 label(aa$Gender)       <- "Gender"
 label(aa$intub)     <- "Intubation"
@@ -231,37 +268,29 @@ units(aa$rr_rts)       <- "RTS"
 table1(~ Gender + pt_age_yrs + res_survival + host_care_level + intub + ISS + rr_rts + sbp_rts +
          gcs_sum + dt_ed_first_ct + dt_ed_emerg_proc| probYN, data=aa)
 
-
-library(PRISMAstatement)
-
-flow_exclusions(
-  incl_counts = c(nrow(xy),nrow(ki), nrow(nks), nrow(nkk),nrow(aa)),
-  total_label = "Patients in the trauma registry",
-  incl_labels = c("Intubation-status known", "Outcome identified", "Matching set criteria","Included in the study"),
-  excl_labels = c("Intubation-status unknown", "Outcome unidentified", "Not meeting age criteria", "Missing value")
-)
-
 ```
 
 # List of Abbreviations
 
-GCS ----    Glasgow Coma Scale
+GCS ----        Glasgow Coma Scale
 
-ISS   ----    Injury severity score
+ISS   ----        Injury severity score
 
-KUH   ----  Karolinska University Hospital
+KUH   ----        Karolinska University Hospital
 
-SweTrau ----       Swedish National Trauma Registry
+SweTrau ----        Swedish National Trauma Registry
 
 M&M   ----        Mortality and Morbidity
 
 RTS ----        Revised Trauma Score
 
+DALY ----       Disability-Adjusted Life Years
+
 # Introduction
 
-Defined as physical injury and the body´s consequential response, trauma, is one of the leading causes of mortality and morbidity (M&M) in all age groups and the leading cause of mortality in people below the age of 44 [@David2021;@champion1990]. Approximately 4.3 million people die each year due to trauma [@James2020]. Motor vehicle crashes alone account for more than one million deaths and roughly between 20 and 50 million injuries annually [@Committee2013]. With an average of more than 7 days in the hospital each stay [@champion1990], trauma is one of the most prevalent reasons for admission. In 2020 road traffic accidents were third in disease burden worldwide, measured by Disability-Adjusted Life Years (DALY),  a term used to describe the impact of health problems and to measure the significance of improvement in medical care [@Murray1996;@Haagsma2015].
+Defined as physical injury and the body´s consequential response, trauma, is one of the leading causes of mortality and morbidity (M&M) in all age groups and the leading cause of mortality in people below the age of 44 [@David2021;@champion1990]. Approximately 4.5 million people die each year due to injury in the world, defined as death where the injury was the underlying cause[@James2020]. Motor vehicle crashes alone account for more than one million deaths and roughly between 20 and 50 million injuries annually [@Committee2013]. With an average of more than 7 days in the hospital each stay [@champion1990], trauma is one of the most prevalent reasons for admission. In 2020 road traffic accidents were third in disease burden worldwide, measured by Disability-Adjusted Life Years (DALY),  a term used to describe the impact of health problems and to measure the significance of improvement in medical care [@Murray1996;@Haagsma2015].
 
-In many cases the outcome is mostly dependent on the quality of care acquired [@Dogrul2020], as observed in the decline of deaths by organ dysfunction, reduced from 5% of all trauma deaths to approximately 0% after the adaptation of various treatment strategies and improvement in critical care, demonstrated by a study conducted in Karolinska University Hospital (KUH) [@Ghorbani2014]. In a teaching hospital in Tehran, reviews of all trauma cases in 1 year displayed inappropriate care in 45% of all deaths and implied that approximately 26% of all trauma deaths were preventable [@Zafarghandi2003].Other studies have estimated preventable and potentially preventable trauma death rates up to 60% [@Konadu2020]. Airway management, inadequate chest compression, inadequate blood or fluid supply are some factors that previously were found in need of improvement in trauma care [@Zafarghandi2003;@Maio1996]. Advances in trauma care are the leading cause of the decreased number of preventable deaths according to the American College of Surgeons Committee [@Committee2013].
+In many cases the outcome of the patient is mostly dependent on the quality of care acquired [@Dogrul2020], as observed in the decline of deaths by organ dysfunction, reduced from 5% of all trauma deaths to approximately 0% after the adaptation of various treatment strategies and improvement in critical care, demonstrated by a study conducted in Karolinska University Hospital (KUH) [@Ghorbani2014]. Advances in trauma care are the leading cause of the decreased number of preventable deaths according to the American College of Surgeons Committee [@Committee2013]. Inconsistencies in trauma care are prevalent in areas such as resources, diagnosis, and treatment. In a teaching hospital in Tehran, reviews of all trauma cases in 1 year displayed inappropriate care in 45% of all deaths and implied that approximately 26% of all trauma deaths were preventable [@Zafarghandi2003].Other studies have estimated preventable and potentially preventable trauma death rates up to 60% [@Konadu2020]. Airway management, inadequate chest compression, inadequate blood or fluid supply are some factors that previously were found in need of improvement in trauma care according to different studies [@Zafarghandi2003;@Maio1996].
 
 It has for a long period of time been of great importance to investigate factors that can be improved in trauma care and different methods are used to do so. The gold standard is M&M conferences, during which specific cases are reviewed to further investigate the reason behind the mortality or morbidity [@WHO2009]. The results are used to improve the trauma care and to decrease the number of preventable errors. Although these conferences are a vital part for advancement in trauma care, it remains a process that requires a great amount of resources and is still complicated to this day.
 
@@ -273,7 +302,7 @@ Trauma quality improvement programs rely on set filters for the selection of cas
 
 ### Study design
 
-We conducted a retrospective cohort study using data from the KUH trauma registry and the trauma care quality database, both from SweTrau, the Swedish National Trauma Registry. Established in 2004, the trauma registry includes information of pre-hospital, hospital, and post-hospital care in accordance with the Utstein template. Factors such as demographics, vital signs, time to procedure and time to intervention are registered [@Dick1999]. The trauma care quality database consists of the cases selected for review and the presence of opportunity for improvement is noted. The registries where linked and possible factors associated with opportunities for improvement were extracted. All statistical analysis were first done on synthetic data to ensure objectivity. Bi- and multivariable logistic regression were used to determine association with the presence of opportunity for improvement. 
+A retrospective cohort study using data from the KUH trauma registry, and the trauma care quality database, both from SweTrau, the Swedish National Trauma Registry was conducted. Established in 2004, the trauma registry includes information of pre-hospital, hospital, and post-hospital care in accordance with the Utstein template [@Utstein2009]. Factors such as demographics, vital signs, time to procedure and time to intervention are registered [@Dick1999]. The trauma care quality database consists of the cases selected for review and the presence of opportunity for improvement is noted. The registries where linked and possible factors associated with opportunities for improvement were extracted. Bi- and multivariable logistic regression were used to determine association with the presence of opportunity for improvement.
 
 ### Setting
 
@@ -283,29 +312,49 @@ Cases are selected for M&M conferences by specialized nurses mainly based on pre
 
 ### Participants
 
-The trauma registry includes all patients admitted with trauma team activation, regardless of ISS, as well as patients admitted without trauma team activation but found to have an ISS of more than 9. The previously mentioned audit filters are used to select patients for inclusion in the trauma care quality database and M&M review. The inclusion criteria for this study are patients included in the database, the registry and aged at least 15 years. We conducted a complete case analysis, hence patients with missing data in any of the covariates or outcome with the exception of GCS, respiratory rate, and systolic blood pressure were excluded. Data was collected for patients registered between 2014 and 2021.
+The trauma registry includes all patients admitted with trauma team activation, regardless of ISS, as well as patients admitted without trauma team activation but found to have an ISS of more than 9. The previously mentioned audit filters are used to select patients for inclusion in the trauma care quality database and M&M review. The inclusion criteria for this study are patients included in the database, the registry and aged at least 15 years. A complete case analysis was conducted, hence patients with missing data in any of the covariates or outcome with the exception of GCS, respiratory rate, and systolic blood pressure were excluded. Data was collected for approximately 21 000 patients registered between 2014 and 2021.
 
 ```{r}
 library(PRISMAstatement)
 
 flow_exclusions(
-  incl_counts = c(nrow(xy),nrow(ki), nrow(nks), nrow(nkk),nrow(aa)),
+  incl_counts = c(nrow(xy),nrow(calk), nrow(ki)),
   total_label = "Patients in the trauma registry",
-  incl_labels = c("Intubation-status known", "Outcome identified", "Matching set criteria","Included in the study"),
-  excl_labels = c("Intubation-status unknown", "Outcome unidentified", "Not meeting age criteria", "Missing value")
+  incl_labels = c("Outcome identified", "Included in the study"),
+  excl_labels = c("Outcome unidentified", "Missing data")
 )
 ```
 
+```{r echo=F,results='asis',error=F,warning=F}
+library(dplyr)
+sewe<-filter(sew, missing != 0)
+
+rownames(sewe)[rownames(sewe) == "res_survival"] = "Survival after 30 days"
+rownames(sewe)[rownames(sewe) == "gcs_sum"] = "GCS"
+rownames(sewe)[rownames(sewe) == "rr_rts"] = "Respiratory rate"
+rownames(sewe)[rownames(sewe) == "intub"] = "Intubation"
+rownames(sewe)[rownames(sewe) == "host_care_level"] = "Highest hospital care level"
+rownames(sewe)[rownames(sewe) == "probYN"] = "Outcome"
+rownames(sewe)[rownames(sewe) == "pt_age_yrs"] = "Age"
+rownames(sewe)[rownames(sewe) == "dt_ed_first_ct"] = "Time to first CT"
+rownames(sewe)[rownames(sewe) == "sbp_rts"] = "Systolic blood pressure"
+rownames(sewe)[rownames(sewe) == "dt_ed_emerg_proc"] = "Time to intervention"
+
+library(knitr)
+kable(sewe[,1:2], format = "markdown")
+```
 
 ### Variables
 
 **Study outcome**
 
-The study outcome is significantly associated with the outcome variable using any or all predictive variables. The outcome variable is the presence of opportunities for improvement, as labeled by the M&M review board, and defined as a binary variable with the levels "Yes - At least one opportunity for improvement identified" and "No - No opportunities for improvement identified". Data on this outcome will be extracted from the trauma care quality database. 
+The study outcome is significantly associated with the outcome variable using any or all predictive variables. The outcome variable is the presence of opportunities for improvement, as labeled by the M&M review board, and defined as a binary variable with the levels "Yes - At least one opportunity for improvement identified" and "No - No opportunities for improvement identified". Presence of opportunities for improvement is defined as preventable error made in a specific patient case. Data on this outcome will be extracted from the trauma care quality database. 
 
 **Predictors**
 
 As our aim is to assess how patient level factors are associated with opportunity for improvement, the database used will therefore have some factors that can be further examined [@Swetrau2020]. The selection of variables to be further examined are made through discussion within the research team and partly based on locally used audit filters and factors frequently registered in the database. Selected factors to be further examined are divided into categorical and continuous variables. The categorical variables are sex, survival after 30 days, highest level of hospital care, GCS, respiratory rate, systolic blood pressure and intubation of the patient. The continuous variables are age, ISS, time from arrival at the hospital until first CT and time from arrival at the hospital until first intervention.
+
+Systolic blood pressure and respiratory rate are registered to the database as either a continuous or a categorical value according to the Revised Trauma Score (RTS), but never both. The decision to convert the continuous values, if registered, into corresponding categorical value and treat them all as categorical was therefore made. All vital signs had to be treated similar and GCS will therefore be divided into categories based on RTS [Table 1]. 
 
 ### Data sources and measurements
 
@@ -315,29 +364,25 @@ All of the data is extracted from the KUH trauma registry and the trauma care qu
 
 Since this is not a blinded study it is of utter importance to acknowledge the risk of bias. Synthetic data will however be used to develop the analysis model and after satisfactory results implement it on the data collected from the databases. This is done to lower the risk of bias.
 
-### Study size
-
-We will include all patients from the KUH trauma care quality registry and the corresponding information from the KUH trauma registry. Registration took place between 2014 and 2021 with approximately 21000
-
-### Quantitative variables
-
-Such variables include age, systolic blood pressure, respiratory rate, ISS, GCS and time to CT and intervention as previously described. Systolic blood pressure and respiratory rate are registered to the database as either a continuous or a categorical value according to the Revised Trauma Score (RTS), but never both. We therefore made the decision to convert the continuous values, if registered, into corresponding categorical value and treat them all as categorical [table.1]. We also decided that all vital signs had to be treated similar and therefore divided GCS into categories based on RTS.
-
 ### Statistical methods
 
-We did a complete case analysis of all patients in the Karolinska trauma care quality registry. Variables were handled and converted in accordance with the SweTrau Manual. Potential variables were selected based on currently used audit filters, expert consensus and common demographics. Due to GCS and respiratory rate not being registered in patients intubated before arrival at the emergency department we determined that the most reasonable solution would be to use pre-hospital values registered by paramedics, to include these patients. Bivariate and multivariable logistic regression were used to determine significant association with the presence of opportunity for improvement. Results are presented in an confidence level of 95% and a p value of less than 0,05 was considered significant.
+A complete case analysis of all patients in the Karolinska trauma care quality registry was done. Variables were handled and converted in accordance with the SweTrau Manual. Potential variables were selected based on currently used audit filters, expert consensus and common demographics. Due to GCS and respiratory rate not being registered in patients intubated before arrival at the emergency department the most reasonable solution would be to use pre-hospital values registered by paramedics, to include these patients. All statistical analysis were first done on synthetic data to ensure objectivity. Bi- and multivariable logistic regression were used to determine association with the presence of opportunity for improvement. Results are presented in an confidence level of 95% and a p value of less than 0,05 was considered significant.
 
 # Results
 
-Out of `r nrow(xy)` included in both the registry and database `r nrow(xy)-nrow(aa)` were excluded due to missing data and age under 15, producing a study group of `r nrow(aa)`. The most prevalent reason for exclusion was missing data in the variable XY15 with XY16 patients out of the `r nrow(xy)` registered. In the trauma care quality database XY17 patients were included with an opportunity for improvement in XY18  (XY19 %). The majority of patients were XY20 (XY21). The mean age for patients included was XY24.
+Out of `r nrow(xy)` included in the trauma registry `r nrow(xy)-nrow(na.kl)` were excluded due to missing data and age under 15, leaving a total of `r nrow(na.kl)` cases applicable for the study. The most prevalent reason for exclusion was missing data in the variable `r rownames(sewe[sewe$missing == sewe[1,1],])` with `r sewe[1,1]` patients, `r round(sewe[1,1]/nrow(xy)*100, digits = 2)`% of patients registered. In the trauma care quality database `r nrow(problem_scrambled)` patients were registered, although `r sum(is.na(problem_scrambled$probYN))` had to be excluded due to unidentified outcome, leaving `r nrow(problem_scrambled)-sum(is.na(problem_scrambled$probYN))` cases applicable for the study. After the combination of data from the trauma registry and the trauma care quality database and the removal of unqualified cases, a study group of `r nrow(aa)` is produced. f
+
+----- with an opportunity for improvement in XY18  (XY19 %). The majority of patients were XY20 (XY21). The mean age for patients included was XY24.
 
 
 ### Factors associated with preventable errors
-All selected variables unadjusted are presented in [Table 2] with respective p-value. Adjusted variables are presented in [table 3] through the use of logistic regression. The lowest p-value is found in the variable XY22 (XY23). The survival rate after 30 days among included patientens is XY25 (XY26, XY27, XY28)
+All selected variables unadjusted are presented in [Table 2] with respective p-value. Adjusted variables are presented in [table 3] through the use of logistic regression. The lowest p-value is found in the variable XY22 (XY23). The survival rate after 30 days among included patientens is `r sum(aa$res_survival=='Alive')` (XY26, XY27, XY28)
 
 ```{r}
 table1(~ Gender + pt_age_yrs + res_survival + host_care_level + intub + ISS + rr_rts + sbp_rts +
          gcs_sum + dt_ed_first_ct + dt_ed_emerg_proc| probYN, data=aa)
+
+summary(logistic)
 ```
 
 
