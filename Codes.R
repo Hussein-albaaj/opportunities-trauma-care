@@ -1,3 +1,15 @@
+
+
+DETTA ÄR EN GAMMAL VERSION AV MIN KOD.
+VG SE PUBLICATION FÖR ALL KOD OCH TEXT.
+
+
+
+
+
+
+
+
 xy<-read.csv('swetrau-scrambled.csv')
 
 # Gör en kolumn med intub: 1, intub ED, 2. Ej intub. 3. Intub prehosp.
@@ -8,6 +20,7 @@ xy$intub <- with(xy, ifelse(`pre_intubated` == 1 & is.na(xy$pre_intubated) == FA
 # Förslag är att göra detta tidigt i koden så att du senare kan släppa den sorteringen.
 
 install.packages("naniar")
+install.packages('gtsummary')
 library(naniar)
 ab<-xy %>% replace_with_na(replace = list( "res_survival" = 999))
 ac<-ab %>% replace_with_na(replace = list( "intub" = 999))
@@ -17,7 +30,7 @@ swetrau<-ac %>% replace_with_na(replace = list( "host_care_level" = 999))
 library(dplyr)
 
 # JA: Överväg att spara dina RTS konverterade variabler direkt i en ny collumn istället för senare alternativt städa datan först.
-# Varför 350 btw?. 
+# Varför 350 btw?.
 swetrau$ed_sbp_value[is.na(swetrau$ed_sbp_value)]<-350
 
 swetrau$ed_sbp_value[swetrau$ed_sbp_value>=1 & swetrau$ed_sbp_value<=49]<-1
@@ -159,7 +172,7 @@ ae<-aa
 
   # Sätt alla cat.var som factor variables
 
-#JA: Tror det går att göra as.factor på delar av dataset om du villa slippa köra collumn för collumn. men fungerar såklart. 
+#JA: Tror det går att göra as.factor på delar av dataset om du villa slippa köra collumn för collumn. men fungerar såklart.
 str(ae)
 ae$probYN<-as.factor(ae$probYN)
 ae$Gender<-as.factor(ae$Gender)
@@ -298,8 +311,8 @@ install.packages("PRISMAstatement")
 library(PRISMAstatement)
 
 #JA: Finns det en anledning till atu valt att lägga intubations status som en separat flik innan och utanför övriga missing values?
-# Förslag är att intubation ingår i missing values och att du även presenterar en tabell med de olika variablernas NA. 
-# Vi får klura på exakt hur vi presenterar att en patient kan ha flera missing: Prel med en kort deskriptiv text kring det och sedan bara total missing. 
+# Förslag är att intubation ingår i missing values och att du även presenterar en tabell med de olika variablernas NA.
+# Vi får klura på exakt hur vi presenterar att en patient kan ha flera missing: Prel med en kort deskriptiv text kring det och sedan bara total missing.
 
 flow_exclusions(
   incl_counts = c(nrow(xy),nrow(ki), nrow(nks), nrow(nkk),nrow(aa)),
@@ -307,4 +320,17 @@ flow_exclusions(
   incl_labels = c("Intubation-status known", "Outcome identified", "Matching set criteria","Included in the study"),
   excl_labels = c("Intubation-status unknown", "Outcome unidentified", "Not meeting age criteria", "Missing value")
 )
+
+
+a <- c(0,1)
+a$a <- nrow(problem_scrambled)
+a <- as.data.frame(a)
+a$b <- nrow(known_problem_area)
+a$c <- nrow(fewer_variables)
+a$d <- nrow(blunt_multisystem_cohort)
+a$e <- nrow(penetrating_cohort)
+a$f <- nrow(severe_tbi_cohort)
+a$g <- nrow(shock_cohort)
+a$h <- nrow(geriatric_cohort)
+#df with nrow of relevant df:s to be used as reference in code below
 

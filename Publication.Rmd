@@ -112,7 +112,7 @@ problem_scrambled<-read.csv('problem-scrambled.csv')
 names(problem_scrambled)[names(problem_scrambled) == 'Problemomrade_.FMP'] <- 'probYN'
 
 problem_scrambled$probYN <- with(problem_scrambled, ifelse(`probYN` == 'Ok'| `probYN` == 'FÃ¶redÃ¶mligt handlagd'|
- `probYN` == 'ok' & is.na(problem_scrambled$probYN) == FALSE, 'Yes', 'No'))
+ `probYN` == 'ok' & is.na(problem_scrambled$probYN) == FALSE, 'No', 'Yes'))
 
 # Sätt ihop databaser
 calc<-merge(ba,problem_scrambled,by='id')
@@ -122,20 +122,21 @@ calc<-merge(ba,problem_scrambled,by='id')
 
 
 # Gör om till Na
-calb<-calc %>% replace_with_na(replace = list('rr_rts'=5))
-cald<-calb %>% replace_with_na(replace = list('sbp_rts'=5))
-cale<-cald %>% replace_with_na(replace = list('gcs_sum'=5))
-calh<-cale %>% replace_with_na(replace = list('pt_age_yrs'=11))
+calh<-calc %>% replace_with_na(replace = list('pt_age_yrs'=11))
 calj<-calh %>% replace_with_na(replace = list('pt_age_yrs'=13))
 calk<-calj %>% replace_with_na(replace = list('pt_age_yrs'=14))
 sega <- subset(calk,select = -c(Ankomst_te))
 
-library("questionr")
-sew<-as.data.frame(freq.na(sega))
+calb<-sega %>% replace_with_na(replace = list('rr_rts'=5))
+cald<-calb %>% replace_with_na(replace = list('sbp_rts'=5))
+cale<-cald %>% replace_with_na(replace = list('gcs_sum'=5))
 
-# Ta bort ankomsttid
+library("questionr")
+sew<-as.data.frame(freq.na(cale))
+
+# Välj variabler
 library(dplyr)
-nks<-select(calk,cat.var,cont.var)
+nks<-select(sega,cat.var,cont.var)
 
 # Ta bort alla missing data
 ki<- na.omit(nks)
@@ -146,64 +147,56 @@ aa<-ki
 
 # Gör om till faktorer
 str(ae)
-ae$probYN<-as.factor(ae$probYN)
-ae$Gender<-as.factor(ae$Gender)
-ae$host_care_level<-as.factor(ae$host_care_level)
-ae$intub<-as.factor(ae$intub)
-ae$res_survival<-as.factor(ae$res_survival)
-ae$rr_rts<-as.factor(ae$rr_rts)
-ae$sbp_rts<-as.factor(ae$sbp_rts)
-ae$gcs_sum<-as.factor(ae$gcs_sum)
-ae$ISS<-as.numeric(ae$ISS)
-ae$dt_ed_first_ct<-as.numeric(ae$dt_ed_first_ct)
-ae$dt_ed_emerg_proc<-as.numeric(ae$dt_ed_emerg_proc)
-ae$pt_age_yrs<-as.numeric(ae$pt_age_yrs)
+aa$probYN<-as.factor(aa$probYN)
+aa$Gender<-as.factor(aa$Gender)
+aa$host_care_level<-as.factor(aa$host_care_level)
+aa$intub<-as.factor(aa$intub)
+aa$res_survival<-as.factor(aa$res_survival)
+aa$rr_rts<-as.factor(aa$rr_rts)
+aa$sbp_rts<-as.factor(aa$sbp_rts)
+aa$gcs_sum<-as.factor(aa$gcs_sum)
+aa$ISS<-as.numeric(aa$ISS)
+aa$dt_ed_first_ct<-as.numeric(aa$dt_ed_first_ct)
+aa$dt_ed_emerg_proc<-as.numeric(aa$dt_ed_emerg_proc)
+aa$pt_age_yrs<-as.numeric(aa$pt_age_yrs)
 
 # Ritar ut alla värden på graf
-pairs(ae,col=ae$probYN)
+pairs(aa,col=aa$probYN)
 
 # Resultat för varje variabel, unadjusted
-sex<-glm(probYN~Gender,data = ae,family = 'binomial')
+sex<-glm(probYN~Gender,data = aa,family = 'binomial')
 summary(sex)
 
-surv<-glm(probYN~res_survival,data = ae,family = 'binomial')
+surv<-glm(probYN~res_survival,data = aa,family = 'binomial')
 summary(surv)
 
-tub<-glm(probYN~intub,data = ae,family = 'binomial')
+tub<-glm(probYN~intub,data = aa,family = 'binomial')
 summary(tub)
 
-care<-glm(probYN~host_care_level,data = ae,family = 'binomial')
+care<-glm(probYN~host_care_level,data = aa,family = 'binomial')
 summary(care)
 
-resp<-glm(probYN~rr_rts,data = ae,family = 'binomial')
+resp<-glm(probYN~rr_rts,data = aa,family = 'binomial')
 summary(resp)
 
-sysbp<-glm(probYN~sbp_rts,data = ae,family = 'binomial')
+sysbp<-glm(probYN~sbp_rts,data = aa,family = 'binomial')
 summary(sysbp)
 
-gcs_var<-glm(probYN~gcs_sum,data = ae,family = 'binomial')
+gcs_var<-glm(probYN~gcs_sum,data = aa,family = 'binomial')
 summary(gcs_var)
 
-injury<-glm(probYN~ISS,data = ae,family = 'binomial')
+injury<-glm(probYN~ISS,data = aa,family = 'binomial')
 summary(injury)
 
-first_ct<-glm(probYN~dt_ed_first_ct,data = ae,family = 'binomial')
+first_ct<-glm(probYN~dt_ed_first_ct,data = aa,family = 'binomial')
 summary(first_ct)
 
-first_proc<-glm(probYN~dt_ed_emerg_proc,data = ae,family = 'binomial')
+first_proc<-glm(probYN~dt_ed_emerg_proc,data = aa,family = 'binomial')
 summary(first_proc)
 
-age<-glm(probYN~pt_age_yrs,data = ae,family = 'binomial')
+age<-glm(probYN~pt_age_yrs,data = aa,family = 'binomial')
 summary(age)
 
-# Resultat för adjusted variabels
-logistic<-glm(probYN~.,data = ae,family = 'binomial')
-summary(logistic)
-plot(logistic)
-
-plot(pt_age_yrs ~ probYN, data=ae, col="steelblue")
-
-glm.fit=glm(probYN~.,data = ae,family = binomial)
 
 # Table 1
 library(table1)
@@ -216,8 +209,8 @@ aa$probYN <-
 
 aa$Gender <-
   factor(aa$Gender, levels=c("M","K"),
-         labels=c("Male",
-                  "Female"))
+         labels=c("male",
+                  "female"))
 
 aa$res_survival <-
   factor(aa$res_survival, levels=c("1","2"),
@@ -265,8 +258,16 @@ units(aa$dt_ed_emerg_proc)   <- "minutes"
 units(aa$sbp_rts)       <- "RTS"
 units(aa$rr_rts)       <- "RTS"
 
-table1(~ Gender + pt_age_yrs + res_survival + host_care_level + intub + ISS + rr_rts + sbp_rts +
-         gcs_sum + dt_ed_first_ct + dt_ed_emerg_proc| probYN, data=aa)
+# Resultat för adjusted variabels
+logistic<-glm(probYN~.,data = aa,family = 'binomial')
+summary(logistic)
+plot(logistic)
+
+opo<- as.data.frame(table1(~ Gender + pt_age_yrs + res_survival + host_care_level + intub + ISS + rr_rts + sbp_rts +
+         gcs_sum + dt_ed_first_ct + dt_ed_emerg_proc| probYN, data=aa))
+
+library(gtsummary)
+# Kod för resultatdelen
 
 ```
 
@@ -294,9 +295,45 @@ In many cases the outcome of the patient is mostly dependent on the quality of c
 
 It has for a long period of time been of great importance to investigate factors that can be improved in trauma care and different methods are used to do so. The gold standard is M&M conferences, during which specific cases are reviewed to further investigate the reason behind the mortality or morbidity [@WHO2009]. The results are used to improve the trauma care and to decrease the number of preventable errors. Although these conferences are a vital part for advancement in trauma care, it remains a process that requires a great amount of resources and is still complicated to this day.
 
-Despite the evidence supporting the use of predefined models for case selection, there is limited data on specific factors associated with opportunities for improvement in trauma care [@Slater2020]. Therefore, methods such as audit filters are adopted in trauma quality improvement programs. Audit filters are predefined factors used in the selection of cases for review and represent an unfavorable alternation, proclaimed leading to a disadvantageous outcome [@WHO2009;@Evans2009].The audit filters in KUH are systolic blood pressure under 90, Glasgow Coma Scale (GCS) less than 9 and not intubated, injury severity score (ISS) more than 15 but not admitted to the intensive care unit, time to acute intervention more than 60 minutes, time to computed tomography more than 30 minutes, and death within 30 days after trauma. A systematic review of audit filters in 2009 found no studies meeting set criteria determining the effectiveness of set audit filters [@Evans2009].
+Despite the evidence supporting the use of predefined models for case selection, there is limited data on specific factors associated with opportunities for improvement in trauma care [@Slater2020]. Therefore, methods such as audit filters are adopted in trauma quality improvement programs. Audit filters are predefined factors used in the selection of cases for review and represent an unfavorable alternation, proclaimed leading to a disadvantageous outcome [@WHO2009;@Evans2009].Figure 1 demonstrates the selection of cases for M&M conferences using audit filters. The audit filters in KUH are systolic blood pressure under 90, Glasgow Coma Scale (GCS) less than 9 and not intubated, injury severity score (ISS) more than 15 but not admitted to the intensive care unit, time to acute intervention more than 60 minutes, time to computed tomography more than 30 minutes, and death within 30 days after trauma. A systematic review of audit filters in 2009 found no studies meeting set criteria determining the effectiveness of set audit filters [@Evans2009].
 
 Trauma quality improvement programs rely on set filters for the selection of cases for M&M conferences. Some studies have found no major opportunities for improvement in currently used audit filters and believe further advancements are essential [@Cryer1996;@Copes1995]. We hypothesize that certain factors are associated with opportunity for improvement in trauma care. The aim of this study is to asses how patient level factors are associated with opportunity for improvement in trauma care for later development of models trained to identify cases with capacity for improvement. This can be investigated by the examination of many factors registered in our database.
+
+```{r}
+library(DiagrammeR)
+
+DiagrammeR::grViz("
+digraph graph2 {
+
+graph [layout = dot, rankdir = RR]
+
+# node definitions with substituted label text
+node [shape = rectangle, width = 4, fillcolor = Biege]
+a [label = '@@1']
+b [label = '@@2']
+c [label = '@@3']
+d [label = '@@4']
+e [label = '@@5']
+f [label = '@@6']
+h [label = '@@7']
+g [label = '@@8']
+
+a -> b -> c -> h -> d -> e -> f 
+c->g
+
+}
+
+[1]: paste0('The occurence of a trauma')
+[2]: paste0('Registration in SweTrau')
+[3]: paste0('Primary review of audit filters by a nurse')
+[4]: paste0('Secondary review by a colleague')
+[5]: paste0('Multidisciplinary mortality and morbidity conference')
+[6]: paste0('Consensus regarding existance of OFI')
+[7]: paste0('Possible OFI identified')
+[8]: paste0('No OFI identified')
+")
+```
+
 
 # Methods
 
@@ -370,19 +407,20 @@ A complete case analysis of all patients in the Karolinska trauma care quality r
 
 # Results
 
-Out of `r nrow(xy)` included in the trauma registry `r nrow(xy)-nrow(na.kl)` were excluded due to missing data and age under 15, leaving a total of `r nrow(na.kl)` cases applicable for the study. The most prevalent reason for exclusion was missing data in the variable `r rownames(sewe[sewe$missing == sewe[1,1],])` with `r sewe[1,1]` patients, `r round(sewe[1,1]/nrow(xy)*100, digits = 2)`% of patients registered. In the trauma care quality database `r nrow(problem_scrambled)` patients were registered, although `r sum(is.na(problem_scrambled$probYN))` had to be excluded due to unidentified outcome, leaving `r nrow(problem_scrambled)-sum(is.na(problem_scrambled$probYN))` cases applicable for the study. After the combination of data from the trauma registry and the trauma care quality database and the removal of unqualified cases, a study group of `r nrow(aa)` is produced. f
-
------ with an opportunity for improvement in XY18  (XY19 %). The majority of patients were XY20 (XY21). The mean age for patients included was XY24.
-
-
-### Factors associated with preventable errors
-All selected variables unadjusted are presented in [Table 2] with respective p-value. Adjusted variables are presented in [table 3] through the use of logistic regression. The lowest p-value is found in the variable XY22 (XY23). The survival rate after 30 days among included patientens is `r sum(aa$res_survival=='Alive')` (XY26, XY27, XY28)
+The baseline characteristics of included patients are presented in Table 1. Out of `r nrow(xy)` included in the trauma registry `r nrow(xy)-nrow(na.kl)` were excluded due to missing data and age under 15, leaving a total of `r nrow(na.kl)` cases applicable for the study. The most prevalent reason for exclusion was missing data in the variable `r rownames(sewe[sewe$missing == sewe[1,1],])` with `r sewe[1,1]` patients, `r round(sewe[1,1]/nrow(xy)*100, digits = 2)`% of patients registered. In the trauma care quality database `r nrow(problem_scrambled)` patients were registered, although `r sum(is.na(problem_scrambled$probYN))` had to be excluded due to unidentified outcome, leaving `r nrow(problem_scrambled)-sum(is.na(problem_scrambled$probYN))` cases applicable for the study. After the combination of data from the trauma registry and the trauma care quality database and the removal of unqualified cases, a study group of `r nrow(aa)` is produced. Among the `r nrow(aa)` included patients, `r opo[3,4]` were male. The mean age (standard deviation) for all patients was `r opo[6,4]`. The survival rate after 30 days among included patients was `r round(sum(aa$res_survival=='Alive')/nrow(aa)*100, digits = 2)`%.
 
 ```{r}
 table1(~ Gender + pt_age_yrs + res_survival + host_care_level + intub + ISS + rr_rts + sbp_rts +
          gcs_sum + dt_ed_first_ct + dt_ed_emerg_proc| probYN, data=aa)
 
-summary(logistic)
+```
+
+### Factors associated with preventable errors
+An opportunity for improvement was identified in `r sum(aa$probYN == "Opportunity for improvement")` (`r round(sum(aa$probYN == "Opportunity for improvement")/nrow(aa)*100, digits = 2)`%) out of the cases. All selected variables unadjusted are presented in Table 2 with respective p-value. Adjusted variables are presented in Table 3 through the use of logistic regression. Statistical significance was found in the variables 
+
+
+```{r}
+tbl_regression(logistic, exponentiate = TRUE)
 ```
 
 
