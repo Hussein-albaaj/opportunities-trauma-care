@@ -421,7 +421,38 @@ An opportunity for improvement was identified in `r sum(aa$probYN == "Opportunit
 
 ```{r}
 tbl_regression(logistic, exponentiate = TRUE)
+d<-head(tbl_regression(logistic,exponentiate = TRUE))
 ```
+
+
+```{r}
+
+aa['Procent']='100'
+library(ggplot2)
+bah<-ggplot(aa, aes(fill=probYN, y=Procent, x=Gender)) + 
+    geom_bar(position="fill", stat="identity")
+bahb<-ggplot(aa, aes(fill=probYN, y=Procent, x=res_survival)) + 
+    geom_bar(position="fill", stat="identity")
+
+bah
+bahb
+```
+
+
+# Facet according to the cut variable
+install.packages('easyGgplot2')
+library('easyGgplot2')
+
+ggplot2.barplot(data=aa, xName="Gender", 
+              faceting=TRUE, facetingVarNames="cut")
+# Change the direction. 
+# possible values are "vertical", "horizontal".
+# default is vertical.
+ggplot2.barplot(data=diamonds, xName="clarity",
+          faceting=TRUE, facetingVarNames="cut", 
+          facetingDirection="horizontal")
+
+
 
 
 # References
