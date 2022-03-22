@@ -209,8 +209,8 @@ aa$probYN <-
 
 aa$Gender <-
   factor(aa$Gender, levels=c("M","K"),
-         labels=c("male",
-                  "female"))
+         labels=c("Male",
+                  "Female"))
 
 aa$res_survival <-
   factor(aa$res_survival, levels=c("1","2"),
@@ -299,7 +299,7 @@ Despite the evidence supporting the use of predefined models for case selection,
 
 Trauma quality improvement programs rely on set filters for the selection of cases for M&M conferences. Some studies have found no major opportunities for improvement in currently used audit filters and believe further advancements are essential [@Cryer1996;@Copes1995]. We hypothesize that certain factors are associated with opportunity for improvement in trauma care. The aim of this study is to asses how patient level factors are associated with opportunity for improvement in trauma care for later development of models trained to identify cases with capacity for improvement. This can be investigated by the examination of many factors registered in our database.
 
-```{r}
+```{r, echo = FALSE}
 library(DiagrammeR)
 
 DiagrammeR::grViz("
@@ -378,8 +378,11 @@ rownames(sewe)[rownames(sewe) == "sbp_rts"] = "Systolic blood pressure"
 rownames(sewe)[rownames(sewe) == "dt_ed_emerg_proc"] = "Time to intervention"
 
 library(knitr)
-kable(sewe[,1:2], format = "markdown")
+knitr::kable(sewe[,1:2], format = "markdown")
 ```
+
+
+
 
 ### Variables
 
@@ -403,20 +406,21 @@ Since this is not a blinded study it is of utter importance to acknowledge the r
 
 ### Statistical methods
 
-A complete case analysis of all patients in the Karolinska trauma care quality registry was done. Variables were handled and converted in accordance with the SweTrau Manual. Potential variables were selected based on currently used audit filters, expert consensus and common demographics. Due to GCS and respiratory rate not being registered in patients intubated before arrival at the emergency department the most reasonable solution would be to use pre-hospital values registered by paramedics, to include these patients. All statistical analysis were first done on synthetic data to ensure objectivity. Bi- and multivariable logistic regression were used to determine association with the presence of opportunity for improvement. Results are presented in an confidence level of 95% and a p value of less than 0,05 was considered significant.
+A complete case analysis of all patients in the Karolinska trauma care quality registry was done. Variables were handled and converted in accordance with the SweTrau Manual. Potential variables were selected based on currently used audit filters, expert consensus and common demographics. Due to GCS and respiratory rate not being registered in patients intubated before arrival at the emergency department the most reasonable solution would be to use pre-hospital values registered by paramedics, to include these patients. All statistical analysis were first done on synthetic data to ensure objectivity. Bi- and multivariable logistic regression were used to determine association with the presence of opportunity for improvement. Results are presented using a confidence level of 95% and a p value of less than 0,05 was considered significant<!-- You could also say a significance level of 5% -->
 
 # Results
 
-The baseline characteristics of included patients are presented in Table 1. Out of `r nrow(xy)` included in the trauma registry `r nrow(xy)-nrow(na.kl)` were excluded due to missing data and age under 15, leaving a total of `r nrow(na.kl)` cases applicable for the study. The most prevalent reason for exclusion was missing data in the variable `r rownames(sewe[sewe$missing == sewe[1,1],])` with `r sewe[1,1]` patients, `r round(sewe[1,1]/nrow(xy)*100, digits = 2)`% of patients registered. In the trauma care quality database `r nrow(problem_scrambled)` patients were registered, although `r sum(is.na(problem_scrambled$probYN))` had to be excluded due to unidentified outcome, leaving `r nrow(problem_scrambled)-sum(is.na(problem_scrambled$probYN))` cases applicable for the study. After the combination of data from the trauma registry and the trauma care quality database and the removal of unqualified cases, a study group of `r nrow(aa)` is produced. Among the `r nrow(aa)` included patients, `r opo[3,4]` were male. The mean age (standard deviation) for all patients was `r opo[6,4]`. The survival rate after 30 days among included patients was `r round(sum(aa$res_survival=='Alive')/nrow(aa)*100, digits = 2)`%.
+The baseline characteristics of included patients are presented in Table 1<!-- See my comment in the pull request, but you can cross-reference tables and figures using the bookdown output formats. Then instead of "... in Table 1" you could write "in Table \@ref(tab:sample-characteristics)" and the number would be assigned automatically-->. Out of `r nrow(xy)` included in the trauma registry `r nrow(xy)-nrow(na.kl)` were excluded due to missing data and age under 15, leaving a total of `r nrow(na.kl)` cases available for the study. The most common reason for exclusion was missing data in the variable `r rownames(sewe[sewe$missing == sewe[1,1],])` with `r sewe[1,1]` patients, `r round(sewe[1,1]/nrow(xy)*100, digits = 2)`% of patients registered. In the trauma care quality database `r nrow(problem_scrambled)` patients were registered, although `r sum(is.na(problem_scrambled$probYN))` had to be excluded due to unidentified outcome, leaving `r nrow(problem_scrambled)-sum(is.na(problem_scrambled$probYN))` cases applicable for the study. After combining data from the trauma registry and the trauma care quality database and the removal of unqualified cases, the final study sample included `r nrow(aa)` patients. Among the `r nrow(aa)` included patients, `r opo[3,4]` were male. The mean age (standard deviation) for all patients was `r opo[6,4]`. The survival rate after 30 days among included patients was `r round(sum(aa$res_survival=='Alive')/nrow(aa)*100, digits = 2)`%.
 
-```{r}
+```{r sample-characteristics, echo = FALSE}
+## See my comment on html vs markdown tables, and try using my create_table1 function
 table1(~ Gender + pt_age_yrs + res_survival + host_care_level + intub + ISS + rr_rts + sbp_rts +
          gcs_sum + dt_ed_first_ct + dt_ed_emerg_proc| probYN, data=aa)
 
 ```
 
 ### Factors associated with preventable errors
-An opportunity for improvement was identified in `r sum(aa$probYN == "Opportunity for improvement")` (`r round(sum(aa$probYN == "Opportunity for improvement")/nrow(aa)*100, digits = 2)`%) out of the cases. All selected variables unadjusted are presented in Table 2 with respective p-value. Adjusted variables are presented in Table 3 through the use of logistic regression. Statistical significance was found in the variables 
+An opportunity for improvement was identified in `r sum(aa$probYN == "Opportunity for improvement")` (`r round(sum(aa$probYN == "Opportunity for improvement")/nrow(aa)*100, digits = 2)`%) out of the cases. The unadjusted associations of selected variables with opportunities for improvement are presented in Table 2 with respective p-value. Adjusted variables are presented in Table 3 through the use of logistic regression. Statistical significance was found in the variables 
 
 
 ```{r}
