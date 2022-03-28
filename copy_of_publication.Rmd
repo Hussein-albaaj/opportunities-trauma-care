@@ -25,6 +25,7 @@ conn <- DBI::dbConnect(drv = RMariaDB::MariaDB(),
                        password = Sys.getenv("DB_PASSWORD"),
                        db = "opportunities_for_improvement")
 
+
 dataset.names <- setNames(nm = c("swetrau", "fmp", "atgarder", "problem"))
 datasets <- lapply(dataset.names, function(dataset.name) dbReadTable(conn = conn, name = dataset.name))
 
