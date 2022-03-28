@@ -1,8 +1,8 @@
 ---
 title: "Factors associated with opportunities for improvement in trauma care"
-output:
-#  word_document: default
- # pdf_document: default
+output: pdf_document
+word_document: default
+always_allow_html: true
 bibliography: citations.bib
 csl: bmcemerg.csl
 link-citations: yes
@@ -12,8 +12,25 @@ link-citations: yes
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-```{r include=FALSE}
+```{r library, include=FALSE}
+library(kableExtra)
 library(readr)
+library(naniar)
+library(dplyr)
+library("questionr")
+library(table1)
+library(ggplot2)
+library(gridExtra)
+library(ggpubr)
+library(plyr)
+library(gtsummary)
+library(DiagrammeR)
+library(PRISMAstatement)
+library(knitr)
+```
+
+
+```{r include=FALSE}
 xy<-read.csv('swetrau-scrambled.csv')
 
 # Gör en kolumn med intub: 1, intub ED, 2. Ej intub. 3. Intub prehosp.
@@ -21,7 +38,6 @@ xy$intub <- with(xy, ifelse(`pre_intubated` == 1 & is.na(xy$pre_intubated) == FA
 # Förklaring: tub<- om pre inte är Na och är 1(ja), sant: konvertera till 3, Falskt: använd ed_intubated (1 är ja och 2 är nej)
 
 # Gör om 999 till Na
-library(naniar)
 ab<-xy %>% replace_with_na(replace = list( "res_survival" = 999))
 ac<-ab %>% replace_with_na(replace = list( "intub" = 999))
 ada<-ac %>% replace_with_na(replace = list( "host_care_level" = 999))
@@ -35,7 +51,6 @@ adaj<-adag %>% replace_with_na(replace = list( "ed_gcs_sum" = 999))
 swetrau<-adaj %>% replace_with_na(replace = list( "pre_gcs_sum" = 999))
 
 # Gör om blodtryck till RTS
-library(dplyr)
 swetrau$ed_sbp_value[is.na(swetrau$ed_sbp_value)]<-350
 
 swetrau$ed_sbp_value[swetrau$ed_sbp_value>=1 & swetrau$ed_sbp_value<=49]<-1
@@ -95,7 +110,6 @@ swetrau$gcs<-with(swetrau, ifelse(intub == 1 & gc ==5,99,gc))
 swetrau$gcs_sum<-with(swetrau, ifelse(intub == 3 & gcs ==5,99,gcs))
 
 # Egen datafram för räkna missing data
-library(dplyr)
 fake.var<-c("Gender","res_survival","intub","host_care_level","rr_rts","sbp_rts","gcs_sum")
 rak.var<-c("id","Gender","res_survival","intub","host_care_level","rr_rts","sbp_rts","gcs_sum")
 cont.var<-c("ISS","dt_ed_first_ct","dt_ed_emerg_proc","pt_age_yrs")
@@ -107,7 +121,6 @@ kl<-select(swetrau,fake.var,cont.var)
 na.kl<-na.omit(kl)
 
 # Lägg till problemområde och gör om till probYN
-library(readr)
 problem_scrambled<-read.csv('problem-scrambled.csv')
 names(problem_scrambled)[names(problem_scrambled) == 'Problemomrade_.FMP'] <- 'probYN'
 
@@ -131,11 +144,9 @@ calb<-sega %>% replace_with_na(replace = list('rr_rts'=5))
 cald<-calb %>% replace_with_na(replace = list('sbp_rts'=5))
 cale<-cald %>% replace_with_na(replace = list('gcs_sum'=5))
 
-library("questionr")
 sew<-as.data.frame(freq.na(cale))
 
 # Välj variabler
-library(dplyr)
 nks<-select(sega,cat.var,cont.var)
 
 # Ta bort alla missing data
@@ -199,8 +210,6 @@ summary(age)
 
 
 # Table 1
-library(table1)
-
 aa$probYN <-
   factor(aa$probYN,
          levels=c("Yes","No"),
@@ -209,8 +218,8 @@ aa$probYN <-
 
 aa$Gender <-
   factor(aa$Gender, levels=c("M","K"),
-         labels=c("male",
-                  "female"))
+         labels=c("Male",
+                  "Female"))
 
 aa$res_survival <-
   factor(aa$res_survival, levels=c("1","2"),
@@ -224,7 +233,7 @@ aa$intub <-
 
 aa$host_care_level <-
   factor(aa$host_care_level, levels=c("1","2","3","4","5"),
-         labels=c("ED","Admissioned","Surgical Ward","Specialized ward","ICU"))
+         labels=c("ED","Admissioned","surgical ward","Specialized ward","ICU"))
 
 aa$sbp_rts <-
   factor(aa$sbp_rts, levels=c("4","3","2","1","0","5"),
@@ -266,8 +275,21 @@ plot(logistic)
 opo<- as.data.frame(table1(~ Gender + pt_age_yrs + res_survival + host_care_level + intub + ISS + rr_rts + sbp_rts +
          gcs_sum + dt_ed_first_ct + dt_ed_emerg_proc| probYN, data=aa))
 
-library(gtsummary)
-# Kod för resultatdelen
+# Kod för resultat-delen
+# Värden för stapel-diagram
+calculation<-aa
+calculation$host_care_level <-
+  factor(calculation$host_care_level, levels=c("ED","Admissioned","surgical ward","Specialized ward","ICU"),
+         labels=c("ED","adm","surg","Spec","ICU"))
+
+calculation$intub <-
+  factor(calculation$intub, levels=c("Pre-hospital Intubation","ED Intubation","Not Intubated"),
+         labels=c("Pre-Intub", "Intub","Not Intub"))
+
+calculation$gcs_sum <-
+  factor(calculation$gcs_sum, levels=c("Mild: 13-15","Moderate: 9-12","Severe: 3-8","Missing","Pre-intubated"),
+         labels=c("13-15","9-12","3-8","Missing","Pre-intub"))
+
 
 ```
 
@@ -299,8 +321,7 @@ Despite the evidence supporting the use of predefined models for case selection,
 
 Trauma quality improvement programs rely on set filters for the selection of cases for M&M conferences. Some studies have found no major opportunities for improvement in currently used audit filters and believe further advancements are essential [@Cryer1996;@Copes1995]. We hypothesize that certain factors are associated with opportunity for improvement in trauma care. The aim of this study is to asses how patient level factors are associated with opportunity for improvement in trauma care for later development of models trained to identify cases with capacity for improvement. This can be investigated by the examination of many factors registered in our database.
 
-```{r}
-library(DiagrammeR)
+```{r, echo = FALSE}
 
 DiagrammeR::grViz("
 digraph graph2 {
@@ -352,7 +373,6 @@ Cases are selected for M&M conferences by specialized nurses mainly based on pre
 The trauma registry includes all patients admitted with trauma team activation, regardless of ISS, as well as patients admitted without trauma team activation but found to have an ISS of more than 9. The previously mentioned audit filters are used to select patients for inclusion in the trauma care quality database and M&M review. The inclusion criteria for this study are patients included in the database, the registry and aged at least 15 years. A complete case analysis was conducted, hence patients with missing data in any of the covariates or outcome with the exception of GCS, respiratory rate, and systolic blood pressure were excluded. Data was collected for approximately 21 000 patients registered between 2014 and 2021.
 
 ```{r}
-library(PRISMAstatement)
 
 flow_exclusions(
   incl_counts = c(nrow(xy),nrow(calk), nrow(ki)),
@@ -363,7 +383,6 @@ flow_exclusions(
 ```
 
 ```{r echo=F,results='asis',error=F,warning=F}
-library(dplyr)
 sewe<-filter(sew, missing != 0)
 
 rownames(sewe)[rownames(sewe) == "res_survival"] = "Survival after 30 days"
@@ -377,8 +396,7 @@ rownames(sewe)[rownames(sewe) == "dt_ed_first_ct"] = "Time to first CT"
 rownames(sewe)[rownames(sewe) == "sbp_rts"] = "Systolic blood pressure"
 rownames(sewe)[rownames(sewe) == "dt_ed_emerg_proc"] = "Time to intervention"
 
-library(knitr)
-kable(sewe[,1:2], format = "markdown")
+knitr::kable(sewe[,1:2], format = "markdown")
 ```
 
 ### Variables
@@ -403,20 +421,20 @@ Since this is not a blinded study it is of utter importance to acknowledge the r
 
 ### Statistical methods
 
-A complete case analysis of all patients in the Karolinska trauma care quality registry was done. Variables were handled and converted in accordance with the SweTrau Manual. Potential variables were selected based on currently used audit filters, expert consensus and common demographics. Due to GCS and respiratory rate not being registered in patients intubated before arrival at the emergency department the most reasonable solution would be to use pre-hospital values registered by paramedics, to include these patients. All statistical analysis were first done on synthetic data to ensure objectivity. Bi- and multivariable logistic regression were used to determine association with the presence of opportunity for improvement. Results are presented in an confidence level of 95% and a p value of less than 0,05 was considered significant.
+A complete case analysis of all patients in the Karolinska trauma care quality registry was done. Variables were handled and converted in accordance with the SweTrau Manual. Potential variables were selected based on currently used audit filters, expert consensus and common demographics. Due to GCS and respiratory rate not being registered in patients intubated before arrival at the emergency department the most reasonable solution would be to use pre-hospital values registered by paramedics, to include these patients. All statistical analysis were first done on synthetic data to ensure objectivity. Bi- and multivariable logistic regression were used to determine association with the presence of opportunity for improvement. Results are presented using a confidence level of 95% and a significance level of 95%.
 
 # Results
 
 The baseline characteristics of included patients are presented in Table 1. Out of `r nrow(xy)` included in the trauma registry `r nrow(xy)-nrow(na.kl)` were excluded due to missing data and age under 15, leaving a total of `r nrow(na.kl)` cases applicable for the study. The most prevalent reason for exclusion was missing data in the variable `r rownames(sewe[sewe$missing == sewe[1,1],])` with `r sewe[1,1]` patients, `r round(sewe[1,1]/nrow(xy)*100, digits = 2)`% of patients registered. In the trauma care quality database `r nrow(problem_scrambled)` patients were registered, although `r sum(is.na(problem_scrambled$probYN))` had to be excluded due to unidentified outcome, leaving `r nrow(problem_scrambled)-sum(is.na(problem_scrambled$probYN))` cases applicable for the study. After the combination of data from the trauma registry and the trauma care quality database and the removal of unqualified cases, a study group of `r nrow(aa)` is produced. Among the `r nrow(aa)` included patients, `r opo[3,4]` were male. The mean age (standard deviation) for all patients was `r opo[6,4]`. The survival rate after 30 days among included patients was `r round(sum(aa$res_survival=='Alive')/nrow(aa)*100, digits = 2)`%.
 
-```{r}
+```{r sample-characteristics, echo = FALSE}
 table1(~ Gender + pt_age_yrs + res_survival + host_care_level + intub + ISS + rr_rts + sbp_rts +
          gcs_sum + dt_ed_first_ct + dt_ed_emerg_proc| probYN, data=aa)
 
 ```
 
 ### Factors associated with preventable errors
-An opportunity for improvement was identified in `r sum(aa$probYN == "Opportunity for improvement")` (`r round(sum(aa$probYN == "Opportunity for improvement")/nrow(aa)*100, digits = 2)`%) out of the cases. All selected variables unadjusted are presented in Table 2 with respective p-value. Adjusted variables are presented in Table 3 through the use of logistic regression. Statistical significance was found in the variables 
+An opportunity for improvement was identified in `r sum(aa$probYN == "Opportunity for improvement")` (`r round(sum(aa$probYN == "Opportunity for improvement")/nrow(aa)*100, digits = 2)`%) out of the cases. The unadjusted associations of selected variables with opportunities for improvement are presented in Table 2 with respective p-value. Adjusted variables are presented in Table 3 through the use of logistic regression. Statistical significance was found in the variables 
 
 
 ```{r}
@@ -424,34 +442,77 @@ tbl_regression(logistic, exponentiate = TRUE)
 d<-head(tbl_regression(logistic,exponentiate = TRUE))
 ```
 
-
 ```{r}
 
-aa['Procent']='100'
-library(ggplot2)
-bah<-ggplot(aa, aes(fill=probYN, y=Procent, x=Gender)) + 
-    geom_bar(position="fill", stat="identity")
-bahb<-ggplot(aa, aes(fill=probYN, y=Procent, x=res_survival)) + 
-    geom_bar(position="fill", stat="identity")
+# Rita ut Stapeldiagram
+calculation['Percentage']='100'
 
-bah
-bahb
+bahb<-ggplot(calculation, aes(fill=probYN, y=Percentage, x=res_survival)) + 
+    geom_bar(position = position_fill(reverse = TRUE), stat="identity")
+oppo_surv<-bahb + rremove("legend.title")
+opportunity_survival <- oppo_surv + labs(y = "Percent (%)", x = "Survival (30 days)")
+plot(opportunity_survival)
+
+
+
+baha<-ggplot(calculation, aes(fill=probYN, y=Percentage, x=intub)) + 
+    geom_bar(position = position_fill(reverse = TRUE), stat="identity")+
+  rremove("ylab")
+oppo_intub<-baha + theme(legend.position="none")
+opportunity_intub <- baha + labs(y = "Percent (%)", x = "Intubation")
+pewp2 <- opportunity_intub + guides(fill=guide_legend(title="OFI"))
+
+
+
+bah<-ggplot(calculation, aes(fill=probYN, y=Percentage, x=Gender)) + 
+    geom_bar(position = position_fill(reverse = TRUE), stat="identity")
+oppo_sex<-bah + theme(legend.position="none") 
+opportunity_sex <- oppo_sex + labs(y = "Percent (%)", x = "Gender")
+pewp1 <- opportunity_sex + guides(fill=guide_legend(title="OFI"))
+
+
+
+backa<-ggplot(calculation, aes(fill=probYN, y=Percentage, x=host_care_level)) + 
+    geom_bar(position = position_fill(reverse = TRUE), stat="identity")+
+  rremove("ylab")
+oppo_care_level<-backa + theme(legend.position="none")
+opportunity_care_level<- oppo_care_level + labs(y = "Percent (%)", x = "Highest hospital care level")
+pewp3 <- opportunity_care_level + guides(fill=guide_legend(title="OFI"))
+
+
+
+backas<-ggplot(calculation, aes(fill=probYN, y=Percentage, x=rr_rts)) + 
+    geom_bar(position = position_fill(reverse = TRUE), stat="identity")
+oppo_rr<-backas + theme(legend.position="none")
+opportunity_rr <- oppo_rr + labs(y = "Percent (%)", x = "Respiratory rate")
+pewp4 <- opportunity_rr + guides(fill=guide_legend(title="OFI"))
+
+
+
+bahbah<-ggplot(calculation, aes(fill=probYN, y=Percentage, x=sbp_rts)) + 
+    geom_bar(position = position_fill(reverse = TRUE), stat="identity")+
+  rremove("ylab")
+oppo_sbp<-bahbah + theme(legend.position="none")
+opportunity_sbp <- oppo_sbp + labs(y = "Percent (%)", x = "Systolic blood pressure")
+pewp5 <- opportunity_sbp + guides(fill=guide_legend(title="OFI"))
+
+
+
+babah<-ggplot(calculation, aes(fill=probYN, y=Percentage, x=gcs_sum)) + 
+    geom_bar(position = position_fill(reverse = TRUE), stat="identity")+
+  rremove("ylab")
+oppo_gcs<-babah + theme(legend.position="none")
+opportunity_gcs <- oppo_gcs + labs(y = "Percent (%)", x = "Glasgow coma scale")
+pewp6 <- opportunity_gcs + guides(fill=guide_legend(title="OFI"))
+
+
+
+pp<- ggarrange(pewp1, pewp2, pewp3, pewp4, pewp5, pewp6,
+          labels = c("A", "B", "C", "D","E","F"),
+          ncol = 3, nrow = 2, common.legend = TRUE, legend = "bottom")
+
+plot(pp)
 ```
-
-
-# Facet according to the cut variable
-install.packages('easyGgplot2')
-library('easyGgplot2')
-
-ggplot2.barplot(data=aa, xName="Gender", 
-              faceting=TRUE, facetingVarNames="cut")
-# Change the direction. 
-# possible values are "vertical", "horizontal".
-# default is vertical.
-ggplot2.barplot(data=diamonds, xName="clarity",
-          faceting=TRUE, facetingVarNames="cut", 
-          facetingDirection="horizontal")
-
 
 
 
