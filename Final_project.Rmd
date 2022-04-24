@@ -1,8 +1,8 @@
 ---
 title: "Factors associated with opportunities for improvement in trauma care"
 output: bookdown::pdf_document2
+bibliography: citation.bib
 always_allow_html: true
-bibliography: citations.bib
 csl: bmcemerg.csl
 link-citations: yes
 ---
@@ -12,17 +12,10 @@ knitr::opts_chunk$set(echo = FALSE)
 ```{r global_options, include=FALSE}
 knitr::opts_chunk$set(fig.pos = 'H')
 ```
-
-<style type="text/css">
-
-h1.title {
-  font-size: 38px;
-  color: Black;
-  text-align: center;
-}
-
-</style>
-
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+```
+\newpage
 
 ```{r library, include=FALSE}
 library(readr)
@@ -465,27 +458,40 @@ app.log<-tbl_regression(app.outcome_log,exponentiate = TRUE)
 app.log
 ```
 
+### Faktorer som associeras med möjligheter för utveckling inom trauma: En register-baserad retrospektiv cohort studie
+Bakgrund: Trauma är en av de ledande orsakerna bakom mortalitet och morbiditet oberoende på ålder. Som observerats i många tidigare studier så är utfallet för patienterna väldigt beroende på kvaliteten av sjukvården. Mortalitet och mobiditet konferenser äger rum för att förbättra kvaliteten av vården inom trauma. I dessa så diskuteras specifika fall för att finna möjligheter för utveckling (MFU). Valet av fall som skall inkluderas inom deras konferenser är fortfarande komplicerat och ineffektivt. Metoder: En retrospektiv cohort studie som använde sig utav traumaregistret och trauma vårdkvalitetsregister som extraherades från SweTrau, det svenska nationella traumaregister. Tio faktorer inkluderades och kopplades med MFU som utfall. Bi- och multivariabel logistisk regression användes för att hitta en association mellan variablerna och utfallet. Resultat: Totalt 4643 fall som inkluderades. MFU hittades i 276 (5.94%) av alla fall. Medianåldern för patienter med MFU var 49, 42 in patienter utan MFU. Medianen av "injury severity score" (ISS) var 12 enheter högre bland patienter med MFU, 17 jämfört med 5 hos patienter utan MFU. Klinisk relevans identifierades hos bland annat variabeln "högsta vårdnivån". oddskvoten för MFU var 15.7 i specialiserade avdelningar jämfört med akuten. Slutsats: Högsta vårdnivå, ålder och ISS var markant associerade med MFU inom trauma. Framtida insatser bör fokusera på den orätvisan som finns bland vårdkvaliteten av olika patienter inom trauma. 
+
+### Factors associated with opportunities for improvement in trauma care: A registry-based retrospective cohort study
+Background: Trauma is one of the leading causes of mortality and morbidity in all age groups. As observed in many previous studies, the outcome in different cases is mostly dependent on the quality of care acquired. To improve the quality of care in trauma, mortality and morbidity conferences take place, during which specific cases are reviewed to further investigate opportunities for improvement (OFI). It is still however not clear how to select these cases in an efficient way. Methods: A retrospective cohort study using data from the trauma registry, and the trauma care quality database, both from the Swedish National Trauma Registry. Ten factors were included and linked with OFI as an outcome. Bi- and multivariable logistic regression were used to determine association with the presence of OFI. Results: A total of 4643 cases were applicable for the study. OFI was identified in 276 (5.94%) out of the cases. The median age for patients with OFI is 49, 42 in patients with no OFI. The median injury severity score (ISS) is also 12 units higher in the OFI-group, 17 compared to 5 with no OFI.  Distinctions were identified depending on the highest hospital care level. An odds ratio of 15.7 for OFI was found in the specialized ward compared to the ED. Conclusion: Higher hospital care level, age and ISS were found to be highly associated with OFI in trauma care. Future efforts should focus on the injustice in the quality of care for different patients in trauma. 
+
+Keywords: Trauma, quality care, preventable errors, opportunity for improvement, audit filters
+
+\newpage
+
 # List of Abbreviations
 
+DALY ---       Disability-Adjusted Life Years
+
+ED ---       Emergency Department
+
 GCS ---        Glasgow Coma Scale
+
+ICU ---       Intensive Care Unit
 
 ISS   ---        Injury severity score
 
 KUH   ---        Karolinska University Hospital
 
-SweTrau ---        Swedish National Trauma Registry
-
 M&M   ---        Mortality and Morbidity
-
-RTS ---        Revised Trauma Score
-
-DALY ---       Disability-Adjusted Life Years
 
 OFI ---       Opportunity For Improvement
 
-ED ---       Emergency Department
+RTS ---        Revised Trauma Score
 
-ICU ---       Intensive Care Unit
+SweTrau ---        Swedish National Trauma Registry
+
+
+\newpage
 
 # Introduction
 
@@ -721,10 +727,25 @@ hpp <- pp + labs(caption = "Opportunity for improvement presented in the remaini
 plot(hpp)
 
 ```
-
+\newpage
 
 # Discussion
- 
+
+This registry-based cohort study aimed to find factors associated with OFI in trauma care for improvement of the selection of cases for mortality and morbidity reviews. This study shows that there are some correlations between different factors and the occurrence of OFI in trauma care. Statistical significance was found in eight of the ten included variables, before or after the adjustment for other variables, or even both. The factor mostly associated with OFI is the highest hospital care level, with an odds ratio of 15.7 and 12.1 in specialized wards and ICU respectively, compared to the ED. Meaning that patients treated in the specialized wards and ICU are much more likely to be exposed to preventable errors. A previous study in the US has shown that more than half of the preventable and probably preventable deaths occur in the ICU [@Teixeira2007]. This could be explained by the usual complexity of cases treated in the ICU. The most prevalent reasons found to be the cause of preventable errors are airway management and perioperative care according to this study in California, those patients are usually found in the ICU [@Teixeira2009]. Patients with ED as the highest hospital care level are usually less injured and therefore need less intervention which in turn leads to lower odds of preventable errors.
+
+It is important to acknowledge that OFI and preventable errors are not equal to preventable deaths. This study also proves that there is no correlation between death within 30 days after trauma and preventable errors. Before the adjustment for other factors the p-value for survival after 30 days was not significant. There is however a significant p-value after the adjustment although it suggests that the odds of an OFI is higher in patients that are alive after 30 days. Although OFI in patients that die within 30 days after trauma is not equivalent to preventable deaths, due to the facts that an OFI does only imply that there is a preventable error but not the magnitude of that error, we estimated OFI to be found in 6.8% of all trauma deaths at KUH. A study performed by colleagues at KUH identified at least one preventable error in 21% of all trauma deaths, although only 4% of all trauma deaths were found to be preventable [@Ghorbani2018].
+
+As seen in the results, the variable “Time to intervention” had to be excluded. It was noticed during the analysis of the results that nearly 81% of the cases had missing values in that variable. If all of these cases were to be excluded there would be a shift in the results as there are many categories in some variables that would be without any cases (Table \@ref(tab:sample-character)). Table \@ref(tab:var-time) demonstrates the results if “Time to intervention” was to be included, p-value lower than 0.05 is not found in any variable. Only 977 patients would be included in that study with OFI in 141 of the cases, compared to 4643 patients without the variable with OFI in 276 of the cases. The removal of one variable is not optimal but we have to take into account that most of the patients in the ED would be excluded due to low percentage of intervention and that variable would be missing. That would in turn lead to misleading results. The decision was made to remove that variable and include the results with time to intervention in the appendix.
+
+Other factors associated with opportunities for improvement are the continuous factors age and ISS. As seen in Table \@ref(tab:sample-characteristics) the median age differs between the two different groups, it is higher by 7 years in the OFI group. The reason behind the higher percentage of OFI in elder patients is still unclear. A systematic review published 2017 identified many studies where lower healthcare quality for elders was potentially justified by the lower chance of survival [@Salway2017]. The argument that focusing more resources on younger patients could lead to a lower mean value of DALY could be made. However, if such a decision of resource distribution is morally justified is not evident.
+The median ISS was 17 in the OFI-group compared to 5 in cases with no OFI. The same arguments could be made here that patients with more complex injuries are more likely to be exposed to preventable errors. Two studies performed in Germany showed higher numbers of preventable errors in patients with ISS > 15 compared to the whole population. In Cologne when analyzing preventable and potentially preventable deaths in patients with ISS > 15 they estimated it to be 20.2% of all trauma deaths [@Schoeneberg2016]. When calculating the same numbers for all ages in Berlin it was estimated to be 15.1% of all trauma deaths [@Kleber2013].
+
+# Strengths and limitations
+One of the primary strengths of this study is that all trauma 1 patients in Stockholm during 4 years are included. Meaning that even patients not included in M&M conferences by audit filters are reviewed by nurses and sent to M&M conferences if any possibility of an OFI is present. Even cases not reviewed by the board during an M&M conference are included, these cases however lack OFI. This is important since the effectiveness of audit filters is not yet proven by any study and it also lowers the odds of any bias present as a consequence of audit filters and the selection of cases for M&M conferences. Other efforts to lower the odds of bias were to develop a model on synthetic data to later implement it on real data. 
+
+The primary limitations were the removal of one variable, time to intervention, due to the fact that it had missing values in approximately 81% of the cases and the results would have been misleading since there is a correlation between less complex cases and no intervention. Even though the removal of a variable after gathering the results is not optimal, we realized that it had to be done to attain practical information. It was also discovered that the data was from 2017 and onward and not 2014 as promised earlier. Some cases were from before 2017 but these had to be excluded since they all had no OFI and the cases with OFI had to been registered improperly somehow. 
+
+Finally, the results of both unadjusted and adjusted factors have to be mentioned as a strength. As discussed earlier there are some differences in the significance of a factor depending on if it is analyzed by itself or compared to other variables. When removing the factor time to intervention it was noticed that some factors are strongly correlated to other factors, such as time to intervention and highest hospital care level, where patients with missing in time to intervention were usually in lower hospital care levels. Another example is GCS and intubation, were patients with lower GCS were usually intubated. When analyzing the variables after the adjustment for other variables, we can see the true effect of that variable on the outcome.
 
 # Appendix
 Flowchart of excluded patients (Figure \@ref(fig:missing-fig))
@@ -774,19 +795,32 @@ tbl_merge_test3 <-
 
 app.hellp<- tbl_merge_test3 %>% modify_spanning_header(list (estimate_1 ~ "Unadjusted", ci_1 ~ "Unadjusted", p.value_1 ~ "Unadjusted", estimate_2 ~ "Adjusted", ci_2 ~ "Adjusted", p.value_2 ~ "Adjusted"))
 
+
+
 app.flpp <- app.hellp %>% as_flex_table()
+app.flpp <- set_table_properties(app.flpp, width = .8, layout = "autofit")
 
 app.flpp <- theme_vanilla(app.flpp)
-app.flpp <- add_footer_lines(app.flpp, "Unadjusted and adjusted variables with odds ratio, confidence interval and p-value respectively. P-values <0.05 are statistically significant and are therefore bold")
 app.flpp <- set_caption(app.flpp, caption = "Adjusted and unadjusted variables")
+app.flpp <- add_footer_lines(app.flpp, "Unadjusted and adjusted variables with odds ratio, confidence interval and p-values")
+
 app.flpp
 ```
 
 ```{r var-time, echo=FALSE, message=FALSE, warning=FALSE, fig.align='center'}
 app.flpp
 ```
-```{r}
-heeel <- aa %>% count(ofi, Gender)
+k.sex <- aa %>% count(ofi, Gender)
+k.res <- aa %>% count(ofi, res_survival)
+k.intub <- aa %>% count(ofi, intub)
+k.host <- aa %>% count(ofi, host_care_level)
+k.rr <- aa %>% count(ofi, rr_rts)
+k.sbp <- aa %>% count(ofi, sbp_rts)
+k.gcs <- aa %>% count(ofi, gcs_sum)
+k.ISS <- aa %>% count(ofi, ISS)
+k.age <- aa %>% count(ofi, pt_age_yrs)
+k.ct <- aa %>% count(ofi, dt_ed_first_ct)
+
 
 heeel = ddply(heeel, .(Gender), transform, percent = n/sum(n) * 100)
 heeel = ddply(heeel, .(Gender), transform, pos = (cumsum(n) - 0.5 * n))
@@ -795,8 +829,9 @@ heeel$label = paste0(sprintf("%.0f", heeel$percent), "%")
 ggplot(heeel, aes(x = factor(Gender), y = n, fill = ofi)) +
     geom_bar(position = position_stack(), stat = "identity", width = .7) +
     geom_text(aes(label = label), position = position_stack(vjust = 0.5), size = 4)
-```
 
+
+ggplot(heeel, aes(fill=ofi, y=Percentage, x=factor(Gender))) + geom_bar(position = "fill", stat="identity") + geom_text(aes(label = label), position = position_stack(vjust = 0.5), size = 4)
 
 
 # References
