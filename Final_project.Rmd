@@ -486,7 +486,11 @@ M&M   ---        Mortality and Morbidity
 
 OFI ---       Opportunity For Improvement
 
+RR ---        Respiratory Rate
+
 RTS ---        Revised Trauma Score
+
+SBP ---       Systolic Blood pressure
 
 SweTrau ---        Swedish National Trauma Registry
 
@@ -627,7 +631,7 @@ An opportunity for improvement was identified in `r sum(aa$ofi == "Opportunity f
 As seen in Table \@ref(tab:sample-characteristics) the median age for patients with OFI is 49, which is 7 years higher than the median for the group of patients with no OFI. The median ISS is also 12 units higher in the OFI-group, 17 compared to 5 in no OFI. In the variable GCS, statistical significance was found in patients with missing value after adjustment. As mentioned earlier these were included in the study. Both ISS and highest hospital care level displayed p-values lower than 0.001 both adjusted and unadjusted, intubation and age only unadjusted.
 
 
-```{r, include=FALSE}
+```{r j, include=FALSE}
 tbl_merge_test <-
     tbl_merge(tbls = list(aa %>%
                               select(ofi, pt_age_yrs, Gender, res_survival, rr_rts, sbp_rts, gcs_sum, intub, host_care_level, ISS, dt_ed_first_ct) %>%
@@ -656,8 +660,7 @@ flpp
 ```
 
 
-As seen in Figure \@ref(fig:care-level) there are clear distinctions between the different groups in hospital care level. An odds ratio of 15.7 is found in the specialized ward compared to the ED. 10.6 and 12.1 in the surgical wards and ICU respectively (Table \@ref(tab:var-adjusted)). In patients treated in a specialized ward an opportunity for improvement was identified in 15.2% of the cases, compared to 1.1% in patients treated in the ED. Results are incomplete in the variables systolic blood pressure and respiratory rate due to lack of patients in a few groups. Figure \@ref(fig:rest-barchart) displays the proportion of OFI in the remaining variables.
-
+As seen in Figure \@ref(fig:care-level) there are clear distinctions between the different groups in highest hospital care level. An odds ratio of 15.7 is found in the specialized ward compared to the ED. 10.6 and 12.1 in the surgical wards and ICU respectively (Table \@ref(tab:var-adjusted)). In patients treated in a specialized ward an opportunity for improvement was identified in 15.2% of the cases, compared to 1.1% in patients treated in the ED. Results are incomplete in the variables systolic blood pressure and respiratory rate due to lack of patients in a few groups. 
 
 ```{r care-level, fig.cap=" \\textbf{Opportunity for improvement presented in the variable Highest hospital care level. ED = Emergency department, Adm = administered to a normal ward, Surg = surgical ward, Spec = Specialized ward}", echo=FALSE}
 
@@ -684,7 +687,7 @@ ggplot(data = test.calc, aes(x = factor(res_survival),
 
 
 
-```{r, include=FALSE}
+```{r hkl, include=FALSE}
 
 opportunity_sex <-ggplot(calculation, aes(fill=ofi, y=Percentage, x=Gender)) + geom_bar(position = "fill", stat="identity")+ rremove("ylab") + theme(legend.position="none") + rremove("grid") + labs(y = "Percent (%)", x = "Sex") + guides(fill=guide_legend(title="OFI"))
 
@@ -722,7 +725,9 @@ pp<- ggarrange(opportunity_sex, opportunity_survival ,opportunity_intub, opportu
 hpp <- pp + labs(caption = "Opportunity for improvement presented in the remaining  variables. Intub = Intubated, Pre-intub = Patient intubated before arrival at the emergency department.")
 ```
 
-```{r rest-barchart, echo=FALSE, fig.cap= "\\textbf{Opportunity for improvement presented in the remaining  variables. Intub = Intubated, Pre-intub = Patient intubated before arrival at the emergency department.}"}
+Figure \@ref(fig:rest-barchart) displays the proportion of OFI in the remaining variables. No clear distinction was found regarding OFI dependent on sex. In the variable systolic blood pressure OFI was found in 5.8% of the patients with a systolic blood pressure higher than 89, and 17.6% in patients with a systolic blood pressure between 50-75. No patients with a systolic blood pressure lower than 50 had an OFI. Patients intubated in the hospital also had a higher percentage of OFI compared to patients not intubated or intubated before arrival at the hospital. 
+
+```{r rest-barchart, fig.cap= "\\textbf{Opportunity for improvement presented in the remaining  variables. Intub = Intubated, Pre-intub = Patient intubated before arrival at the emergency department}", echo=FALSE}
 
 plot(hpp)
 
@@ -738,7 +743,14 @@ It is important to acknowledge that OFI and preventable errors are not equal to 
 As seen in the results, the variable “Time to intervention” had to be excluded. It was noticed during the analysis of the results that nearly 81% of the cases had missing values in that variable. If all of these cases were to be excluded there would be a shift in the results as there are many categories in some variables that would be without any cases (Table \@ref(tab:sample-character)). Table \@ref(tab:var-time) demonstrates the results if “Time to intervention” was to be included, p-value lower than 0.05 is not found in any variable. Only 977 patients would be included in that study with OFI in 141 of the cases, compared to 4643 patients without the variable with OFI in 276 of the cases. The removal of one variable is not optimal but we have to take into account that most of the patients in the ED would be excluded due to low percentage of intervention and that variable would be missing. That would in turn lead to misleading results. The decision was made to remove that variable and include the results with time to intervention in the appendix.
 
 Other factors associated with opportunities for improvement are the continuous factors age and ISS. As seen in Table \@ref(tab:sample-characteristics) the median age differs between the two different groups, it is higher by 7 years in the OFI group. The reason behind the higher percentage of OFI in elder patients is still unclear. A systematic review published 2017 identified many studies where lower healthcare quality for elders was potentially justified by the lower chance of survival [@Salway2017]. The argument that focusing more resources on younger patients could lead to a lower mean value of DALY could be made. However, if such a decision of resource distribution is morally justified is not evident.
+
 The median ISS was 17 in the OFI-group compared to 5 in cases with no OFI. The same arguments could be made here that patients with more complex injuries are more likely to be exposed to preventable errors. Two studies performed in Germany showed higher numbers of preventable errors in patients with ISS > 15 compared to the whole population. In Cologne when analyzing preventable and potentially preventable deaths in patients with ISS > 15 they estimated it to be 20.2% of all trauma deaths [@Schoeneberg2016]. When calculating the same numbers for all ages in Berlin it was estimated to be 15.1% of all trauma deaths [@Kleber2013].
+
+When analyzing the vital signs included, some association with OFI was found. In respiratory rate >29 an OFI was found in 11.0% of the cases, compared to 5.8% in 10-29. A study performed in Iran showed similar findings when comparing preventable deaths between patients with RR <20 and 20 or higher. It was found that deaths in patients with 20 or higher in RR were more likely to be preventable [@Davoodabadi2021]. A theory explaining this could be the low frequency of cases with a RR over 29, meaning lower experience in the trauma team in those cases. There are also clear protocols on how to act in cases with hypoventilation, known by the majority of the trauma team. There is a possibility that protocols on hyperventilation are not as well known. These cases are usually more complex as well. 
+
+A systolic blood pressure between 50 and 75 contributed to 3.5 more possibilities for an OFI compared to SBP over 89. Two different studies have both shown an odds ratio of 2.3 in SBP under 60 and 90 respectively [@Yadollahi2020;@GonzlezRobledo2015]. An OFI was identified in 17.6% of the cases with SBP 50-75 compared to 5.8% in cases with SBP over 89. Same argument as in highest hospital care could be made here that trauma patients with hypotension are more complex than those with normal SBP. A hypotension could be a consequence of hemorrhage and could in turn lead to a shock.
+
+Statistical significance was also identified in patients intubated at the hospital, but not in those intubated before arrival. Intubation at the hospital contributed to 2.8 more possibilities for an OFI compared to non-intubated patients. As mentioned earlier, GCS less than 9 and not intubated was an audit filter at this hospital. In this study GCS was unfortunately not combined with intubation, however the reason behind higher percentage of OFI in patients intubated after the arrival at the hospital could be explained by the delay of intubation in these cases.No correlation to OFI was found in the variables sex and time to first CT.
 
 # Strengths and limitations
 One of the primary strengths of this study is that all trauma 1 patients in Stockholm during 4 years are included. Meaning that even patients not included in M&M conferences by audit filters are reviewed by nurses and sent to M&M conferences if any possibility of an OFI is present. Even cases not reviewed by the board during an M&M conference are included, these cases however lack OFI. This is important since the effectiveness of audit filters is not yet proven by any study and it also lowers the odds of any bias present as a consequence of audit filters and the selection of cases for M&M conferences. Other efforts to lower the odds of bias were to develop a model on synthetic data to later implement it on real data. 
@@ -746,6 +758,25 @@ One of the primary strengths of this study is that all trauma 1 patients in Stoc
 The primary limitations were the removal of one variable, time to intervention, due to the fact that it had missing values in approximately 81% of the cases and the results would have been misleading since there is a correlation between less complex cases and no intervention. Even though the removal of a variable after gathering the results is not optimal, we realized that it had to be done to attain practical information. It was also discovered that the data was from 2017 and onward and not 2014 as promised earlier. Some cases were from before 2017 but these had to be excluded since they all had no OFI and the cases with OFI had to been registered improperly somehow. 
 
 Finally, the results of both unadjusted and adjusted factors have to be mentioned as a strength. As discussed earlier there are some differences in the significance of a factor depending on if it is analyzed by itself or compared to other variables. When removing the factor time to intervention it was noticed that some factors are strongly correlated to other factors, such as time to intervention and highest hospital care level, where patients with missing in time to intervention were usually in lower hospital care levels. Another example is GCS and intubation, were patients with lower GCS were usually intubated. When analyzing the variables after the adjustment for other variables, we can see the true effect of that variable on the outcome.
+
+# Clinical applications
+
+The aim of this study was to find factors associated with opportunities for improvement to make further advancements in trauma care. New information was gathered using data never used before. Many factors were found to be associated with OFI. This information could be used to train personnel and develop new strategies to lower the frequency of preventable errors. The selection of cases for M&M conferences in trauma could also be made easier using the results from this study. There is also hope that this study sheds more light on existing problems in trauma care and the injustice in the quality of care dependent on factors such as age.
+
+Equity
+Sex was a factor in the study. As mentioned in the results there were no correlation between OFI and the two different sex. Trauma is however more prevalent in males (68%). More studies are needed to find differences in trauma care dependent on sex, if such differences are present. Children under the age 15 were not included in the study, meaning no comparison between children and adults was made. However the median age was higher in cases with OFI meaning that there is a difference in the quality of care dependent on age. 
+
+# Future studies
+Future studies are needed globally to achieve the attention that is required to decrease the number of preventable errors in trauma care. It is also needed since the quality of care can differ between hospitals. This is not only a problem in trauma care but in all specialities. The database used also had approximately 200 factors registered, these could also be examined in future studies. As discussed earlier this study did not examine the effectiveness of all audit filters but only variables. Audit filters such as GCS under 9 and not intubated could be examined by the association of two different factors. 
+
+# Conclusion
+In conclusion higher hospital care level, age and injury severity score were found to be highly associated with OFI in trauma care. Other factors had some correlation to OFI. Some adjustments could be made to make the selection of cases for mortality and morbidity conferences more efficient to save resources. Future efforts should focus on the injustice in the quality of care for different patients in trauma. Development of models trained to identify cases with capacity for improvement is a possibility.
+
+# Contribution
+Medical student Elias Jorneborg used the same databases and had the same supervisors. His study however focused on the incidence of OFI in different cohorts. This study focused on OFI dependent on different factors to analyze the effectiveness of audit filters and in the future implement effective audit filters.
+
+# Acknowledgment
+I would like to thank my supervisors Martin Gerdin Wärnberg and Jonatan Attergrim for making this project possible and for guiding me through it. It would have not been possible to finish this project without their guidance and support. I would also like to thank the administrative personnel responsible for the database and for giving us access. 
 
 # Appendix
 Flowchart of excluded patients (Figure \@ref(fig:missing-fig))
