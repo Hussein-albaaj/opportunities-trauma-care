@@ -759,7 +759,7 @@ new.cont <- ggarrange(ppp,qqq,ccc,
 new.cont
 ```
 
-Fig.\@ref(fig:boxchart) shows the difference between patients with OFI and patients without OFI in regard to ISS and age. The median age for patients with OFI is 49, which is 7 years higher than the median for the group of patients without OFI. The median ISS is also 12 units higher in the OFI-group, 17 compared to 5 in no OFI. The factor ISS had p-values lower than 0.001 in both the adjusted and unadjusted analyses. Age was also statistically significant in both analyses. The factor time to first CT displayed insignifacant p-values. 
+Fig.\@ref(fig:boxchart) shows the difference between patients with OFI and patients without OFI in regard to ISS, age and time to first CT. The median age for patients with OFI is 49, which is 7 years higher than the median for the group of patients without OFI. The median ISS is also 12 units higher in the OFI-group, 17 compared to 5 in no OFI. The factor ISS had p-values lower than 0.001 in both the adjusted and unadjusted analyses. Age was also statistically significant in both analyses. The factor time to first CT displayed insignifacant p-values. 
 
 ```{r boxchart, fig.cap= "Box plot displaying the distrubtion of patients with OFI and those without in the continuous variables. C displays the distrubtion in regard to time to first CT in logarithmic scale", echo=FALSE}
 new.cont
@@ -794,24 +794,6 @@ Future studies are globally needed to achieve the attention that is required to 
 In conclusion, higher hospital care level, age, ISS, survival after 30 days and GCS were found to be significantly associated with OFI in trauma care after the adjustment for other factors. Some adjustments could be made to make the selection of cases for morbidity and mortality conferences more efficient to save resources. Future efforts should focus on the injustice in the quality of care for different patients in trauma. Development of models trained to identify cases with OFI is a possibility.
 
 # Appendix
-Flowchart of excluded patients (Fig.\@ref(fig:missing-fig))
-
-```{r include=FALSE}
-
-missing_fig <- flow_exclusions(
-  incl_counts = c(nrow(combined.datasets),nrow(calk), nrow(ki)),
-  total_label = "Patients in the trauma registry",
-  incl_labels = c("Outcome identified", "Included in the study"),
-  excl_labels = c("Outcome unidentified", "Missing data")
-)
-
-missing_fig%>% DiagrammeRsvg::export_svg() %>% charToRaw() %>% rsvg::rsvg_pdf("flowchart_ex.pdf")
-```
-
-```{r missing-fig, fig.cap=" \\textbf{Flowchart of excluded patients}", echo=FALSE, fig.align='center'}
-knitr::include_graphics("flowchart_ex.pdf")
-```
-
 
 Table of sample characteristics, if Time to procedure was included (Table \@ref(tab:sample-character))
 
