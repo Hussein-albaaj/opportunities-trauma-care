@@ -768,7 +768,7 @@ new.cont
 
 Fig.\@ref(fig:boxchart) compares ISS, age and time to first CT between patients with and without OFI. The median age for patients with OFI is 49, which is 7 years higher than the median for the group of patients without OFI. The median ISS is also 12 units higher in the OFI-group, 17 compared to 5 in no OFI. Age was also statistically significant in both analyses. The factor time to first CT was not significantly different in patients with OFI compared to those without.
 
-```{r boxchart, fig.cap= "Box plot displaying the distrubtion of patients with OFI and those without in the continuous variables. C displays the distrubtion in regard to time to first CT in logarithmic scale", echo=FALSE}
+```{r boxchart, fig.cap= "Box plot displaying the distribution of patients with OFI and those without in the continuous variables. C displays the distribution in regard to time to first CT in logarithmic scale", echo=FALSE}
 new.cont
 ```
 
@@ -797,8 +797,6 @@ In conclusion more severe trauma that lead to abnormal vital signs and higher ho
 
 # Appendix
 
-Table of sample characteristics, if Time to procedure was included (Table \@ref(tab:sample-character))
-
 ```{r sample-character, fig.align='center', echo = FALSE}
 table2_t <- table1(~ Gender + pt_age_yrs + res_survival + host_care_level + intub + ISS + rr_rts + sbp_rts + gcs_sum + dt_ed_first_ct + dt_ed_emerg_proc | ofi, data=app.aa, caption = "Sample characteristics, if Time to procedure was included")
 
@@ -807,8 +805,6 @@ table2.conv <- t1kable(table2_t) %>%
 
 table2.conv
 ```
-
-Table with unadjusted and adjusted factors with odds ratio, confidence interval and p-value respectively (Table \@ref(tab:var-time))
 
 ```{r, include=FALSE}
 
@@ -844,4 +840,3 @@ app.flpp
 ```
 
 # References
-
