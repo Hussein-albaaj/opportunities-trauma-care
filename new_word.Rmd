@@ -1,0 +1,913 @@
+---
+title: "Factors associated with opportunities for improvement "
+output: bookdown::pdf_document2
+bibliography: citation.bib
+always_allow_html: true
+csl: bmcemerg.csl
+link-citations: yes
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.pos = 'H')
+```
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+```
+\newpage
+
+```{r library, include=FALSE}
+library(readr)
+library(naniar)
+library(plyr)
+library(dplyr)
+library("questionr")
+library(table1)
+library(ggplot2)
+library(gridExtra)
+library(gtsummary)
+library(DiagrammeR)
+library(PRISMAstatement)
+library(knitr)
+library(gt)
+library(tidyverse)
+library(glue)
+library(tinytex)
+library(rmarkdown)
+library(RMariaDB)
+library(DBI)
+library(keyring)
+library(dotenv)
+library(gtsummary)
+library(flextable)
+library(kableExtra)
+library(ggpubr)
+library(lubridate)
+library(parameters)
+library(rofi)
+library(stringr)
+```
+
+```{r include=FALSE}
+conn <- DBI::dbConnect(drv = RMariaDB::MariaDB(),
+                       user = Sys.getenv("DB_USERNAME"),
+                       password = Sys.getenv("DB_PASSWORD"),
+                       db = "opportunities_for_improvement")
+
+#Import data
+dataset.names <- setNames(nm = c("swetrau", "fmp", "atgarder", "problem"))
+datasets <- lapply(dataset.names, function(dataset.name) dbReadTable(conn = conn, name = dataset.name))
+
+attach(datasets)
+
+swetrau$arrival <- as.POSIXct(strptime(swetrau$DateTime_ArrivalAtHospital, format = "%Y-%m-%d %H:%M"))
+fmp$arrival <- as.POSIXct(strptime(fmp$Ankomst_te, format = "%Y%m%d %H:%M"))
+problem$arrival <- as.POSIXct(strptime(problem$Ankomst_te, format = "%Y%m%d %H:%M"))
+swetrau$id <- paste(swetrau$arrival, swetrau$PersonIdentity, swetrau$TempIdentity)
+fmp$id <- paste(fmp$arrival, fmp$Personnummer, fmp$Reservnummer)
+problem$id <- paste(problem$arrival, problem$Personnummer, problem$Reservnummer)
+
+combined.data <- merge(problem, swetrau, by = "id", all.x = FALSE)
+combined.datasets <- merge(fmp, combined.data, by = "id", all.x = FALSE)
+
+detach(datasets)
+
+
+#Remove 2014-2017
+combined.datasets<-filter(combined.datasets, as.Date(strptime(combined.datasets$Ankomst_te.x, format = "%Y%m%d %H:%M")) >="2017-01-01")
+```
+
+```{r include=FALSE}
+# Dela ankosttidskolumnen till datum och tid
+combined.datasets[c('Datum', 'Time')] <- str_split_fixed(combined.datasets$Ankomst_te.x, ' ', 2)
+combined.datasets$work <- with(combined.datasets, ifelse(combined.datasets$Time >= "08:00" & combined.datasets$Time <= "16:59", "Yes", "No"))
+
+
+# Gör samma för veckodag
+combined.datasets[c('Date', 'Tid')] <- str_split_fixed(combined.datasets$arrival, ' ', 2)
+combined.datasets$Date<- as.Date(combined.datasets$Date)
+combined.datasets$weekday <- weekdays(combined.datasets$Date)
+combined.datasets$Weekend <- with(combined.datasets, ifelse(combined.datasets$weekday == "Saturday" | combined.datasets$weekday == "Sunday", "Yes", "No"))
+
+# Skapa ofi
+combined.datasets$ofi <- create_ofi(combined.datasets)
+combined.datasets$ofi <- with(combined.datasets, ifelse(is.na(ofi) | ofi == "No", "No", "Yes"))
+
+# Gör en kolumn med intub: 1, intub ED, 2. Ej intub. 3. Intub prehosp.
+combined.datasets$intub <- with(combined.datasets, ifelse(combined.datasets$pre_intubated == 1 & is.na(combined.datasets$pre_intubated) == FALSE, 3, combined.datasets$ed_intubated))
+# Förklaring: tub<- om pre inte är Na och är 1(ja), sant: konvertera till 3, Falskt: använd ed_intubated (1 är ja och 2 är nej)
+
+# Gör om 999 till Na
+ab<-combined.datasets %>% replace_with_na(replace = list( "res_survival" = 999))
+ac<-ab %>% replace_with_na(replace = list( "intub" = 999))
+ada<-ac %>% replace_with_na(replace = list( "host_care_level" = 999))
+adab<-ada %>% replace_with_na(replace = list( "ed_sbp_rtscat" = 999))
+adac<-adab %>% replace_with_na(replace = list( "ed_rr_rtscat" = 999))
+adad<-adac %>% replace_with_na(replace = list( "pre_rr_rtscat" = 999))
+adae<-adad %>% replace_with_na(replace = list( "ed_sbp_value" = 999))
+adah<-adae %>% replace_with_na(replace = list( "ed_rr_value" = 999))
+adag<-adah %>% replace_with_na(replace = list( "pre_rr_value" = 999))
+adaj<-adag %>% replace_with_na(replace = list( "ed_gcs_sum" = 999))
+swee<-adaj %>% replace_with_na(replace = list( "pre_gcs_sum" = 999))
+
+# Gör om blodtryck till RTS
+swee$ed_sbp_value[is.na(swee$ed_sbp_value)]<-350
+
+swee$ed_sbp_value[swee$ed_sbp_value>=1 & swee$ed_sbp_value<=49]<-1
+swee$ed_sbp_value[swee$ed_sbp_value>=50 & swee$ed_sbp_value<=75]<-2
+swee$ed_sbp_value[swee$ed_sbp_value>=76 & swee$ed_sbp_value<=89]<-3
+swee$ed_sbp_value[swee$ed_sbp_value>89 & swee$ed_sbp_value<=298]<-4
+swee$ed_sbp_value[swee$ed_sbp_value==350]<-5
+
+# Tar RTS värdet från ed, om det inte finns så använder den vanliga blodtrycket, som är grupperat enligt RTS.
+swee$sbp_rts<-with(swee, ifelse(is.na(swee$ed_sbp_rtscat)==FALSE,ed_sbp_rtscat,ed_sbp_value))
+
+# Samma med ed_RR
+swee$ed_rr_value[is.na(swee$ed_rr_value)]<-350
+
+swee$ed_rr_value[swee$ed_rr_value>=1 & swee$ed_rr_value<=5]<-1
+swee$ed_rr_value[swee$ed_rr_value>=6 & swee$ed_rr_value<=9]<-2
+swee$ed_rr_value[swee$ed_rr_value>=10 & swee$ed_rr_value<=29]<-4
+swee$ed_rr_value[swee$ed_rr_value>29 & swee$ed_rr_value<=70]<-3
+swee$ed_rr_value[swee$ed_rr_value==99]<-5
+swee$ed_rr_value[swee$ed_rr_value==350]<-5
+
+swee$ed_rr_rts<-with(swee, ifelse(is.na(swee$ed_rr_rtscat)==FALSE,ed_rr_rtscat,ed_rr_value))
+
+# Samma med pre_RR
+swee$pre_rr_value[swee$pre_rr_value>=1 & swee$pre_rr_value<=5]<-1
+swee$pre_rr_value[swee$pre_rr_value>=6 & swee$pre_rr_value<=9]<-2
+swee$pre_rr_value[swee$pre_rr_value>=10 & swee$pre_rr_value<=29]<-4
+swee$pre_rr_value[swee$pre_rr_value>29 & swee$pre_rr_value<=70]<-3
+swee$pre_rr_value[swee$pre_rr_value==99]<-5
+swee$pre_rr_value[swee$pre_rr_value==350]<-5
+
+swee$pre_rr_rts<-with(swee, ifelse(is.na(swee$pre_rr_rtscat)==FALSE ,pre_rr_rtscat,pre_rr_value))
+
+swee$rr_rts<-with(swee, ifelse(intub == 3 & pre_rr_rts !=5 & is.na(swee$pre_rr_rts)==FALSE ,pre_rr_rts,ed_rr_rts))
+
+
+# Konvertera GCS till mild 13-15 (3), moderate 9-12 (2), severe 3-8. (1). 5 = MISSING
+swee$ed_gcs_sum[swee$ed_gcs_sum>=3 & swee$ed_gcs_sum<=8]<-1
+swee$ed_gcs_sum[swee$ed_gcs_sum>=9 & swee$ed_gcs_sum<=12]<-2
+swee$ed_gcs_sum[swee$ed_gcs_sum>=13 & swee$ed_gcs_sum<=15]<-3
+swee$ed_gcs_sum[swee$ed_gcs_sum==99]<-5
+swee$ed_gcs_sum[is.na(swee$ed_gcs_sum)]<-5
+
+# Gör samma med pre_GCS
+
+swee$pre_gcs_sum[swee$pre_gcs_sum>=3 & swee$pre_gcs_sum<=8]<-1
+swee$pre_gcs_sum[swee$pre_gcs_sum>=9 & swee$pre_gcs_sum<=12]<-2
+swee$pre_gcs_sum[swee$pre_gcs_sum>=13 & swee$pre_gcs_sum<=15]<-3
+swee$pre_gcs_sum[swee$pre_gcs_sum==99]<-5
+swee$pre_gcs_sum[is.na(swee$pre_gcs_sum)]<-5
+
+# Skapa gcs_sum som blir vår nya gcs, 5=missing
+swee$gcs_sum<-with(swee, ifelse(intub == 3 & pre_gcs_sum !=5,pre_gcs_sum,ed_gcs_sum))
+
+# Skapa Dead On Arrival variabeln
+swee$DOA <- with(swee, ifelse(swee$sbp_rts == 0 & swee$rr_rts == 0 & swee$ed_emerg_proc != 1, "Yes", "No"))
+
+swee$dt_ed_first_ct <- as.numeric(swee$dt_ed_first_ct)
+
+# Gör om missing i Time to CT till 1
+swee$dt_ed_first_ct[swee$dt_ed_first_ct>=0 & swee$dt_ed_first_ct<=30]<-1
+swee$dt_ed_first_ct[swee$dt_ed_first_ct>30 & swee$dt_ed_first_ct<=60]<-2
+swee$dt_ed_first_ct[swee$dt_ed_first_ct>60 & swee$dt_ed_first_ct<=90]<-3
+swee$dt_ed_first_ct[swee$dt_ed_first_ct>90]<-4
+swee$dt_ed_first_ct[is.na(swee$dt_ed_first_ct)]<-"not_done"
+
+
+sweer<-subset(swee, DOA != "Yes")
+
+# Gör om till Na
+hker <-sweer %>% replace_with_na(replace = list('pt_age_yrs'=11))
+haker <-hker %>% replace_with_na(replace = list('pt_age_yrs'=13))
+baker<-haker %>% replace_with_na(replace = list('pt_age_yrs'=14))
+
+
+verni <- baker
+verni <- verni %>% drop_na("Gender","res_survival","intub","host_care_level","rr_rts","sbp_rts","gcs_sum","work", "Weekend", "dt_ed_first_ct","ISS","pt_age_yrs")
+
+
+# Egen datafram för räkna missing data
+fake.var<-c("ofi","Gender","res_survival","intub","host_care_level","rr_rts","sbp_rts","gcs_sum", "work", "Weekend", "dt_ed_first_ct", "DOA")
+rak.var<-c("id","ofi","Gender","res_survival","intub","host_care_level","rr_rts","sbp_rts","gcs_sum","work", "Weekend", "dt_ed_first_ct")
+cont.var<-c("ISS","pt_age_yrs")
+cat.var<-c("ofi","Gender","res_survival","intub","host_care_level","rr_rts","sbp_rts","gcs_sum","work", "Weekend", "dt_ed_first_ct")
+
+# Sätt ihop databaser
+calc<-select(sweer,fake.var,cont.var)
+
+# Gör om till Na
+calh<-calc %>% replace_with_na(replace = list('pt_age_yrs'=11))
+calj<-calh %>% replace_with_na(replace = list('pt_age_yrs'=13))
+calk<-calj %>% replace_with_na(replace = list('pt_age_yrs'=14))
+
+# Gör om missing i vitalparametrar för att beräkna missing
+calb<-calk %>% replace_with_na(replace = list('rr_rts'=5))
+cald<-calb %>% replace_with_na(replace = list('sbp_rts'=5))
+caljj<-cald %>% replace_with_na(replace = list('gcs_sum'=5))
+
+sew<-as.data.frame(freq.na(caljj))
+
+# Välj variabler
+nks<-select(calk,cat.var,cont.var)
+
+# Ta bort alla missing data
+ki<- na.omit(nks)
+
+# Kopiera dataframe
+ae<-ki
+aa<-ki
+```
+
+```{r}
+#Flowchart
+clean_audit_filters <- function(data) {
+  audit.filter <- c("VK_hlr_thorak","VK_sap_less90","VK_leverskada",
+                    "VK_gcs_less9_ej_intubTE","VK_mjaltskada","VK_mer_30min_DT",
+                    "VK_mass_transf","VK_mer_60min_interv","VK_iss_15_ej_iva",
+                    "VK_ej_trombrof_TBI_72h","VK_iss_15_ej_TE","VK_avslutad","VK_annat")
+  audit.filter2 <- c("VK_hlr_thorak","VK_sap_less90","VK_leverskada",
+                     "VK_gcs_less9_ej_intubTE","VK_mjaltskada","VK_mer_30min_DT",
+                     "VK_mass_transf","VK_mer_60min_interv","VK_iss_15_ej_iva",
+                     "VK_ej_trombrof_TBI_72h","VK_iss_15_ej_TE","VK_annat")
+  data[,audit.filter][data[,audit.filter] == "Ja"|
+                        data[,audit.filter] == "ja"] <- "Yes"
+  data[,audit.filter][data[,audit.filter] == "Nej"|
+                        data[,audit.filter] == "nej" |
+                        data[,audit.filter] == "nj\r\nNej" |
+                        data[,audit.filter] == "nj"] <- "No"
+  ##### Is nn = NA or No???
+  data[,audit.filter][data[,audit.filter] == "nn"] <- NA
+  ### Create reference vector to check for false inputs in the audit filters.
+  Levels.audit.filters <- unique(as.vector(as.matrix(data[,audit.filter])))
+  Levels.audit.filters <- Levels.audit.filters[!is.na(Levels.audit.filters)]
+  #####
+  ##.   SIC (!!!) The safety check is not compatible with a bootsrap, replications probably lack one of the original values.
+  ######
+  #original.levels.audit.filters <- sort(c("Yes", NA, "No"))
+  #if (!identical(Levels.audit.filters, original.levels.audit.filters))
+  #  stop ("Levels in Audit filters have changed")
+  #########
+  #  Convert NA:s in VK rows to No if VK_avslutad = Yes (To be able to calc false neg)
+  #########
+  data[, audit.filter2] <- lapply(data[, audit.filter2], function(column) {
+    column[is.na(column) & data$VK_avslutad == "Yes"] <- "Yes"
+    return (column)
+  })
+  return(data)
+}
+dataset.clean.af <- clean_audit_filters(verni)
+```
+
+```{r, include=FALSE}
+################################
+## Data/numbers for flowchart ##
+################################
+df <- subset(dataset.clean.af, dataset.clean.af$tra_DodsfallsanalysGenomford == 1)
+n.df <- nrow(df)
+df2 <- subset(dataset.clean.af, dataset.clean.af$Fr1.14 == 2 | dataset.clean.af$Fr1.14 == 3)
+#df3 <- subset(dataset.clean.af,dataset.clean.af$tra_id == 77521)
+df2 <- df2[,c("VK_avslutad","tra_DodsfallsanalysGenomford","Problemomrade_.FMP","Fr1.14","tra_id","ofi","Deceased")]
+### Yes and No from mortality conferance
+n.df.ofi <- sum(df$ofi == "Yes", na.rm = TRUE)
+n.df.no.ofi <- sum(df$ofi == "No", na.rm = TRUE)
+### Patients who have gone trough dödsfall but have no consensus
+df.exc <- df[is.na(df$ofi) == TRUE, ]
+# qd = quality database
+qd <- subset(dataset.clean.af, dataset.clean.af$VK_avslutad == "Yes")
+qd<- subset(qd, is.na(qd$tra_DodsfallsanalysGenomford) == TRUE  | qd$tra_DodsfallsanalysGenomford == 2 )
+n.qd <- nrow(qd)
+clean.qd <- qd
+audit.qd <- clean.qd[clean.qd$VK_hlr_thorak == "Yes" |
+                            clean.qd$VK_sap_less90 == "Yes" |
+                            clean.qd$VK_leverskada == "Yes" |
+                            clean.qd$VK_gcs_less9_ej_intubTE == "Yes" |
+                            clean.qd$VK_mjaltskada == "Yes" |
+                            clean.qd$VK_mer_30min_DT == "Yes" |
+                            clean.qd$VK_mass_transf == "Yes" |
+                            clean.qd$VK_mer_60min_interv == "Yes" |
+                            clean.qd$VK_iss_15_ej_iva == "Yes" |
+                            clean.qd$VK_ej_trombrof_TBI_72h == "Yes"|
+                          clean.qd$VK_annat == "Yes", ]
+n.audit.qd <- nrow(audit.qd)
+#### Patients with all filters No and VK_avslutad = YES - > Still have 2 OFI!!!??
+allneg.ofi <- clean.qd[clean.qd$VK_hlr_thorak == "No" &
+                            clean.qd$VK_sap_less90 == "No" &
+                            clean.qd$VK_leverskada == "No" &
+                            clean.qd$VK_gcs_less9_ej_intubTE == "No" &
+                            clean.qd$VK_mjaltskada == "No" &
+                            clean.qd$VK_mer_30min_DT == "No" &
+                            clean.qd$VK_mass_transf == "No" &
+                            clean.qd$VK_mer_60min_interv == "No" &
+                            clean.qd$VK_iss_15_ej_iva == "No" &
+                            clean.qd$VK_ej_trombrof_TBI_72h == "No" &
+                            clean.qd$VK_annat == "No" &
+                            clean.qd$ofi == "Yes" , ]
+n.allneg.ofi <- nrow(allneg.ofi)
+### Exkluden in first step
+allneg.no.ofi <- clean.qd[clean.qd$VK_hlr_thorak == "No" &
+                            clean.qd$VK_sap_less90 == "No" &
+                            clean.qd$VK_leverskada == "No" &
+                            clean.qd$VK_gcs_less9_ej_intubTE == "No" &
+                            clean.qd$VK_mjaltskada == "No" &
+                            clean.qd$VK_mer_30min_DT == "No" &
+                            clean.qd$VK_mass_transf == "No" &
+                            clean.qd$VK_mer_60min_interv == "No" &
+                            clean.qd$VK_iss_15_ej_iva == "No" &
+                            clean.qd$VK_ej_trombrof_TBI_72h == "No" &
+                            clean.qd$VK_annat == "No" &
+                              clean.qd$ofi == "No" &
+                            clean.qd$VK_avslutad == "Yes" , ]
+n.allneg.no.ofi <- nrow(allneg.no.ofi)
+### Selected VK_Annat
+n.annat <- nrow(clean.qd[clean.qd$VK_hlr_thorak == "No" &
+                              clean.qd$VK_sap_less90 == "No" &
+                              clean.qd$VK_leverskada == "No" &
+                              clean.qd$VK_gcs_less9_ej_intubTE == "No" &
+                              clean.qd$VK_mjaltskada == "No" &
+                              clean.qd$VK_mer_30min_DT == "No" &
+                              clean.qd$VK_mass_transf == "No" &
+                              clean.qd$VK_mer_60min_interv == "No" &
+                              clean.qd$VK_iss_15_ej_iva == "No" &
+                              clean.qd$VK_ej_trombrof_TBI_72h == "No" &
+                              clean.qd$VK_annat == "Yes" &
+                              clean.qd$VK_avslutad == "Yes" , ])
+### To get the two nurse cohort - First take the cohort with some VK_ and VK_avslutad. Then check which have no OFI.
+nurse <- audit.qd[audit.qd$ofi == "No" & is.na(audit.qd$Problemomrade_.FMP) == TRUE, ]
+## To get the Mortality group just check the cases that hade any VK and then if thay have something in problemområde
+MoM <- audit.qd[is.na(audit.qd$Problemomrade_.FMP) == FALSE , ]
+n.MoM <- nrow(MoM)
+n.MoM.no.ofi <- sum(MoM$ofi == "No")
+n.MoM.ofi <- sum(MoM$ofi == "Yes")
+p.MoM.ofi <- round((n.MoM.ofi/n.qd)*100,digits=2)
+n.allneg.no.ofi <- nrow(dataset.clean.af)-n.df - n.annat - n.audit.qd - 1
+n.2nurse.no.ofi <- n.annat + n.audit.qd - n.MoM
+```
+```{r, include=FALSE}
+DiagrammeR::grViz("
+digraph graph2 {
+graph [layout = dot, rankdir = RR]
+# node definitions with substituted label text
+node [width = 4, fillcolor = Biege, shape = rectangle]
+swetrau [label = '@@1']
+qd [label = '@@2']
+audit [label = '@@3']
+annat [label = '@@4']
+nurse [label = '@@5']
+MoM [label = '@@6']
+MoMnoofi [label = '@@7', shape = plaintext, width = 0]
+df [label = '@@8']
+ofi [label = '@@9']
+noofi [label = '@@10']
+dfofi [label = '@@11', shape = plaintext, width = 0]
+dfnoofi [label = '@@12', shape = plaintext, width = 0]
+nursenoofi [label = '@@13', shape = plaintext, width = 0]
+allneg [label = '@@14', shape = plaintext, width = 0]
+MoMofi [label = '@@15', shape = plaintext, width = 0]
+allnegofi [label = '@@16', shape = plaintext, width = 0]
+swetrau -> qd -> audit -> nurse -> MoM -> MoMnoofi -> noofi
+qd -> annat -> nurse
+MoM -> MoMofi -> ofi
+swetrau -> df -> dfofi -> ofi
+df -> dfnoofi -> noofi
+nurse -> nursenoofi -> noofi
+qd -> allneg -> noofi
+qd -> allnegofi -> ofi
+}
+[1]: paste0('Trauma Quality database (n = ', nrow(dataset.clean.af), ')')
+[2]: paste0('Manual Review and Audit filters (n = ', nrow(dataset.clean.af)-n.df, ')')
+[3]: paste0('Selected via Audit filters (n = ', n.audit.qd, ')')
+[4]: paste0('Selected via review by a nurse (n = ', n.annat, ')')
+[5]: paste0('Review by two nurses (n = ', n.annat + n.audit.qd, ')')
+[6]: paste0('Morbidity conference (n = ', n.MoM, ')')
+[7]: paste0('(n = ', n.MoM.no.ofi, ')')
+[8]: paste0('Mortality conferance (n = ', n.df, ')')
+[9]: paste0('OFI (n = ', n.df.ofi + n.MoM.ofi + n.allneg.ofi, ')')
+[10]: paste0('no OFI (n = ', n.df.no.ofi + n.MoM.no.ofi + n.2nurse.no.ofi + n.allneg.no.ofi,  ')')
+[11]: paste0('(n = ', n.df.ofi, ')')
+[12]: paste0('(n = ', n.df.no.ofi, ')')
+[13]: paste0('(n = ', n.2nurse.no.ofi, ')')
+[14]: paste0('(n = ', n.allneg.no.ofi, ')')
+[15]: paste0('(n = ', n.MoM.ofi, ')')
+[16]: paste0('(n = ', n.allneg.ofi, ')')
+") %>% DiagrammeRsvg::export_svg() %>% charToRaw() %>% rsvg::rsvg_pdf("ofi-flowchart.pdf")
+```
+
+
+```{r include=FALSE}
+# Gör om till faktorer
+str(aa)
+aa$ofi<-as.factor(aa$ofi)
+aa$work<-as.factor(aa$work)
+aa$Weekend<-as.factor(aa$Weekend)
+aa$Gender<-as.factor(aa$Gender)
+aa$host_care_level<-as.factor(aa$host_care_level)
+aa$intub<-as.factor(aa$intub)
+aa$res_survival<-as.factor(aa$res_survival)
+aa$rr_rts<-as.factor(aa$rr_rts)
+aa$sbp_rts<-as.factor(aa$sbp_rts)
+aa$gcs_sum<-as.factor(aa$gcs_sum)
+aa$ISS<-as.numeric(aa$ISS)
+aa$dt_ed_first_ct<-as.factor(aa$dt_ed_first_ct)
+aa$pt_age_yrs<-as.numeric(aa$pt_age_yrs)
+
+# Resultat för varje variabel, unadjusted
+
+sex<-glm(ofi~Gender,data = aa,family = 'binomial')
+summary(sex)
+
+surv<-glm(ofi~res_survival,data = aa,family = 'binomial')
+summary(surv)
+
+tub<-glm(ofi~intub,data = aa,family = 'binomial')
+summary(tub)
+
+care<-glm(ofi~host_care_level,data = aa,family = 'binomial')
+summary(care)
+
+resp<-glm(ofi~rr_rts,data = aa,family = 'binomial')
+summary(resp)
+
+sysbp<-glm(ofi~sbp_rts,data = aa,family = 'binomial')
+summary(sysbp)
+
+gcs_var<-glm(ofi~gcs_sum,data = aa,family = 'binomial')
+summary(gcs_var)
+
+injury<-glm(ofi~ISS,data = aa,family = 'binomial')
+summary(injury)
+
+first_ct<-glm(ofi~dt_ed_first_ct,data = aa,family = 'binomial')
+summary(first_ct)
+
+
+age<-glm(ofi~pt_age_yrs,data = aa,family = 'binomial')
+summary(age)
+
+
+# Table 1
+aa$ofi <-
+  factor(aa$ofi,
+         levels=c("No","Yes"),
+         labels=c("No opportunity for improvement",
+                  "Opportunity for improvement"))
+
+
+aa$Gender <-
+  factor(aa$Gender, levels=c("M","K"),
+         labels=c("Male",
+                  "Female"))
+
+aa$work <-
+  factor(aa$work, levels=c("Yes","No"),
+         labels=c("Yes",
+                  "No"))
+
+aa$Weekend <-
+  factor(aa$Weekend, levels=c("Yes","No"),
+         labels=c("Yes",
+                  "No"))
+
+aa$res_survival <-
+  factor(aa$res_survival, levels=c("2","1"),
+         labels=c("Alive",
+                  "Dead"))
+
+aa$intub <-
+  factor(aa$intub, levels=c("2","3","1"),
+         labels=c("None","Pre-hospital",
+                  "Emergency department"))
+
+aa$host_care_level <-
+  factor(aa$host_care_level, levels=c("1","2","3","4","5"),
+         labels=c("Emergency Department","General Ward","Surgical Ward","High Dependency Unit","Critical Care Unit"))
+
+aa$sbp_rts <-
+  factor(aa$sbp_rts, levels=c("4","3","2","1","0","5"),
+         labels=c(">89","76-89","50-75","1-49","0","Missing"))
+
+aa$gcs_sum <-
+  factor(aa$gcs_sum, levels=c("3","2","1","5"),
+         labels=c("13-15","9-12","3-8","Missing"))
+
+aa$rr_rts <-
+  factor(aa$rr_rts, levels=c("4","3","2","1","0","5"),
+         labels=c("10-29",">29","6-9","1-5","0","Missing"))
+
+aa$dt_ed_first_ct <-
+  factor(aa$dt_ed_first_ct, levels=c("not_done","1","2","3","4"),
+         labels=c("No CT","0-30","31-60","61-90",">90"))
+
+label(aa$ofi)      <- "Outcome"
+label(aa$work)      <- "Working hours"
+label(aa$ISS)      <- "Injury severity score"
+label(aa$Gender)       <- "Sex"
+label(aa$intub)     <- "Intubation"
+label(aa$pt_age_yrs)       <- "Age"
+label(aa$res_survival)       <- "Survival after 30 days"
+label(aa$host_care_level)       <- "Highest hospital care level"
+label(aa$intub)       <- "Intubation"
+label(aa$rr_rts)       <- "Respiratory rate"
+label(aa$sbp_rts)       <- "Systolic blood pressure"
+label(aa$gcs_sum)       <- "GCS"
+label(aa$dt_ed_first_ct)       <- "Time to first CT"
+
+units(aa$pt_age_yrs)       <- "Years"
+units(aa$dt_ed_first_ct)   <- "minutes"
+units(aa$sbp_rts)       <- "mmHg"
+units(aa$rr_rts)       <- "Breaths/min"
+
+opo<- as.data.frame(table1(~ Gender + pt_age_yrs + res_survival + host_care_level + intub + ISS + rr_rts + sbp_rts + work + Weekend + gcs_sum + dt_ed_first_ct | ofi, data=aa))
+
+```
+
+```{r echo=F,results='asis',error=F,warning=F}
+sewe<-filter(sew, missing != 0)
+
+rownames(sewe)[rownames(sewe) == "res_survival"] = "Survival after 30 days"
+rownames(sewe)[rownames(sewe) == "gcs_sum"] = "GCS"
+rownames(sewe)[rownames(sewe) == "rr_rts"] = "Respiratory rate"
+rownames(sewe)[rownames(sewe) == "intub"] = "Intubation"
+rownames(sewe)[rownames(sewe) == "host_care_level"] = "Highest hospital care level"
+rownames(sewe)[rownames(sewe) == "ofi"] = "Outcome"
+rownames(sewe)[rownames(sewe) == "pt_age_yrs"] = "Age"
+rownames(sewe)[rownames(sewe) == "dt_ed_first_ct"] = "Time to first CT"
+rownames(sewe)[rownames(sewe) == "sbp_rts"] = "Systolic blood pressure"
+rownames(sewe)[rownames(sewe) == "dt_ed_emerg_proc"] = "Time to intervention"
+rownames(sewe)[rownames(sewe) == "Gender"] = "Sex"
+rownames(sewe)[rownames(sewe) == "DOA"] = "Dead On Arrival"
+```
+
+# Abstract
+
+*Background*: Trauma is one of the leading causes of morbidity and mortality worldwide. Morbidity and mortality review of specific patient cases is used to improve the quality of trauma care by identifying opportunities for improvement (OFI). The aim of this study was to assess how certain patient level factors are associated with OFI in trauma care.
+
+*Methods*: We used data from the Karolinska University Hospital trauma registry and the trauma care quality database between 2017 and 2021. Our outcome was OFI as defined by the morbidity and mortality review at Karolinska University Hospital. We used bi- and multivariable logistic regression to assess the associations between the following patient level factors and OFI: age, sex, respiratory rate, systolic blood pressure, Glasgow Coma Scale (GCS), Injury Severity Score (ISS), survival at 30 days, highest hospital care level, intubation status and time to CT and intervention. 
+
+*Results*: OFI was identified in 276 (5.94%) out of 4643 patients. The median age for patients with OFI was 49 compared to 42 in patients without OFI. Age, highest hospital care level, ISS, respiratory rate, systolic blood pressure, GCS, survival after 30 days and intubation were statistically significantly associated with OFI. 
+
+*Conclusion*: Several patient level factors were found to be associated with OFI. Future research should focus on identifying reasons why these factors are associated with higher odds of OFI.
+
+\newpage
+
+# Introduction
+Trauma is one of the leading causes of mortality and morbidity in all age groups [@David2021;@Ono2021]. There are approximately 4.5 million global deaths each year due to trauma [@James2020], and it is one of the top contributors to disease burden worldwide, measured by disability-adjusted life years [@Murray1996;@Haagsma2015]. Trauma is also resource-intensive as one of the most common reasons for Critical Care Unit admission [@Prin2016].
+
+According to Donabedian's quality of care model, improvements in the structure of care, for instance resources, competence and application of procedural protocols should lead to improvement in clinical processes (such as interventions performed by health care provider) which in turn would lead to improvement in patient outcome [@Donabedian1988]. The structure of care and clinical process together constitutes trauma system performance. There are quite a few methods for improvement in trauma, the multidisciplinary morbidity and mortality review process is however the mainstay for trauma care quality improvement [@WHO2009]. The process identifies preventable deaths and opportunities for improvement (OFI) in the structure and clinical processes of the trauma care in each patient case.
+
+Preventable death rates range between four and 60% across different settings and countries  [@Zafarghandi2003;@Konadu2020; @Ghorbani2018; @Ivatury_2008; @Roy_2017]. The rate of OFI in trauma deaths range between 20 and 76% [@Ghorbani2018; @Esposito_2003; @Sanddal_2011] The most common OFI relate to airway management, management of traumatic brain injury, fluid replacement, delays in prehospital transport and delays to surgery [@Zafarghandi2003; @Teixeira2007; @OReilly2013; @Roy_2017]. However, the rate of OFI cannot be directly compared between institutions as the process to select patients and the definition of OFI may differ in the trauma quality improvement process.
+
+The aim of this study was to assess how trauma system performance, severity of injury and certain patient factors are associated with OFI in trauma care.
+
+# Methods
+
+### Study design
+We used data from the Karolinska University Hospital trauma registry, part of the Swedish National Trauma Registry (SweTrau) [@Swetrau2020], and the local trauma care quality database. The trauma registry includes data on pre-hospital, hospital, and post-hospital care in accordance with the Utstein template [@Utstein2009]. Factors such as demographics, vital signs, time to procedure and time to intervention are registered [@Dick1999]. The trauma care quality database includes the trauma patients reviewed at the mortality and care quality conference from the year of 2017. This database includes the results of the morbidity and mortality review including OFI. We linked the trauma registry and trauma care quality database and extracted factors potentially associated with OFI. We used bi- and multivariable logistic regression to determine association with the presence of OFI.
+
+### Setting
+All priority one trauma patients in Stockholm  are transported to Karolinska University Hospital to receive care by dedicated trauma teams [@traumalarmskriterier2017]. These teams consist of a trauma surgeon, an anaesthetist, an orthopaedic surgeon, a radiologist and specialized nurses. Karolinska University Hospital in Solna is equivalent to a level one trauma center, with direct access to radiology, intervention, surgery, intensive care and consultants in all associated specialities [@Social2015;@NKS2020].
+
+All trauma patients presenting to Karolinska University Hospital are included in a screening process using audit filters and subsequent manual review by specialised nurses. Audit filters are applied to identify patients in which OFI are more likely. These filters are systolic blood pressure under 90, Glasgow Coma Scale (GCS) less than 9 and not intubated, Injury Severity Score (ISS) more than 15 but not admitted to the ICU, not recieved anticoagulation treatment within 72 hours after traumatic brain injury, time to acute intervention more than 60 minutes, time to computed tomography (CT) more than 30 minutes, liver laceration, splenic laceration, thoracotomy, massive transfusion, cardiopulmonary resuscitation and death within 30 days after trauma [@Swetrau2020].
+
+If the specialized nurses decide that there is a potential OFI, the patient is selected for inclusion in a morbidity and mortality review meeting. During these multidisciplinary meetings the patient cases are reviewed by experienced specialists from all the disciplines and professions involved in the trauma team. The presence or absence of OFI is a consensus decision among all participants of the conference and is recorded in the trauma care quality database.
+
+### Participants
+The trauma registry includes all patients admitted with trauma team activation, regardless of ISS, as well as patients admitted without trauma team activation but found to have an ISS of more than 9. We included all patients who had been included in the morbidity and mortality screening process between 2017 and 2021. We excluded patients who were younger than 15 years and patients dead on arrival. Patients with missing data in a variable except for systolic blood pressure, GCS, respiratory rate and time to CT are excluded.
+
+### Variables
+
+**Study outcome**
+\newline
+The outcome was the presence of OFI, as decided by the morbidity and mortality review board, and defined as a binary variable with the levels "Yes - At least one OFI identified" and "No - No OFI identified". Data on this outcome was extracted from the trauma care quality database. 
+
+**Patient level factors**
+\newline
+We selected factors from the trauma registry, based on locally used audit filters, standard epidemiological factors and factors frequently registered in Swetrau. The categorical variables were sex, survival after 30 days, highest hospital care level, GCS, respiratory rate, systolic blood pressure, working hours, weekend, time from arrival at the hospital until first CT and if the patient was intubated. We also included the continuous variables age and ISS.
+
+Systolic blood pressure and respiratory rate are registered as either a continuous or a categorical value according to the Revised Trauma Score. We decided to convert the continuous values, if registered, into categorical values and include a missing category. GCS was also categorized using the Revised Trauma Score levels. We used pre-hospital, pre-intubation, values for GCS and respiratory rate for patients who were intubated before arrival at the emergency department.
+
+The variable highest hospital care level is divided into 5 categories: Emergency Department, General Ward, Surgical Ward, High Dependency Unit and Critical Care Unit. Patients that are in need of higher level of care that can not be provided in the usual General Ward but do not require intensive care are admitted to High Dependency Units such as dedicated trauma wards with more extensive monitoring. Patients with multi-organ failure or who require mechanical ventilation are admitted to Critical Care Units [@Utstein2009]. The factor working hours is defined as arrival to the hospital between 8.00 a.m. and 5 p.m. Weekend is defined as arrival to the hospital Saturday or Sunday.
+
+### Statistical analysis
+Descriptive statistics are used to present the baseline characteristics. We used bivariable logistic regression to determine unadjusted association, and multivariable logistic regression to determine adjusted associations with the presence of OFI. We present results as odds ratios (OR) with associated 95% confidence interval. We used a significance level of 5%. The programming language R was used for all analyses [@Rstudio2022]. All statistical analysis were first done on synthetic data and later implemented on the data collected from the trauma registry and the trauma care quality database to ensure objectivity.
+
+# Results
+
+Out of `r nrow(combined.datasets)` patients included in the trauma registry between 2017 and 2021, `r nrow(combined.datasets)-nrow(ki)` patients were excluded due to missing data or age under 15, leaving a total of `r nrow(ki)` patients eligible for the study. Fig.\@ref(fig:flowchart-process) demonstrates the number of patients in each stage of the process. 223 patients were included in the mortality reviews and 1064 in the morbidity review, 301 of whom were found to have an OFI. The factor with most missing data was `r rownames(sewe[sewe$missing == sewe[1,1],])` with `r sewe[1,1]` patients, `r round(sewe[1,1]/nrow(combined.datasets)*100, digits = 2)`% of patients registered. The number of patients with missing data in each factor is shown in Table \@ref(tab:missing-data). Patients with missing values in GCS, respiratory rate and systolic blood pressure were included. All of the patients were also registered in the trauma care quality database making them applicable for the study. Once the two databases had been merged and the eligibility criteria applied, a study sample of `r nrow(aa)` patients remained.
+
+```{r flowchart-process, fig.cap="Flowchart describing the process of selection and results for morbidity and mortality conferences, with number of patients in each stage between 2014-2017. OFI = Opportunities for improvement", echo=FALSE, fig.align='center'}
+knitr::include_graphics("ofi-flowchart.pdf")
+```
+
+The baseline characteristics are presented in Table \@ref(tab:sample-characteristics). Among the `r nrow(aa)` included patients, `r opo[3,4]` were male. The study group had an overall 30 days mortality rate of `r round(sum(aa$res_survival=='Dead')/nrow(aa)*100, digits = 1)`% and a median age of `r opo[7,4]`.
+
+```{r sample-characteristics, fig.align='center', echo = FALSE}
+
+table1_t <- table1(~ pt_age_yrs + Gender + res_survival + host_care_level + intub + ISS + rr_rts + sbp_rts + gcs_sum + work + Weekend + dt_ed_first_ct | ofi, data=aa, longtable = TRUE, cat.varlist  = c("stage", "trt"),cat.rmstat   = list(c("row"), c("col")))
+
+table2_t <- knitr::kable(table1_t, format = "markdown", caption = "<strong> Sample characteristics </strong>")
+
+table2_t
+```
+
+```{r missing-data, fig.cap="Note that the total number of missing values is more than the total number of patients as some patients may have missing values in more than one factor", echo = FALSE, fig.align='center'}
+missing_table <- knitr::kable(sewe[,1:2], format = "markdown", caption = "<strong> Missing  values in each factor</strong>", footnote = "Some patients may have missing values in more than one factor. Missing in dead on arrival = Dead on arrival")
+
+missing_table
+```
+\newpage
+As seen in Fig.\@ref(fig:care-level) the odds of OFI differed significantly across highest hospital care level. In patients treated in a high dependency unit OFI was identified in 13.2% of the patients, compared to 1.2% in patients treated in the emergency department. Respiratory rate had missing values in two different groups due to lack of patients with OFI in these groups. No major differences were found between the groups in GCS. OFI was found in 5.6% of the patients with a systolic blood pressure higher than 89, and 19.4% in patients with a systolic blood pressure between 50-75. No patient with a systolic blood pressure lower than 50 had any OFI registered.
+
+```{r, include=FALSE}
+aa$host_care_level <-
+  factor(aa$host_care_level, levels=c("Emergency Department","General Ward","Surgical Ward","High Dependency Unit","Critical Care Unit"),
+         labels=c("ED","GW","SW","HDU","CCU"))
+
+k.sex <- aa %>% count(ofi, Gender)
+k.res <- aa %>% count(ofi, res_survival)
+k.intub <- aa %>% count(ofi, intub)
+k.host <- aa %>% count(ofi, host_care_level)
+k.rr <- aa %>% count(ofi, rr_rts)
+k.sbp <- aa %>% count(ofi, sbp_rts)
+k.gcs <- aa %>% count(ofi, gcs_sum)
+k.work <- aa %>% count(ofi, work)
+k.weekend <- aa %>% count(ofi, Weekend)
+k.ct <- aa %>% count(ofi, dt_ed_first_ct)
+
+
+k.sex = ddply(k.sex, .(Gender), transform, percent = n/sum(n) * 100)
+k.sex = ddply(k.sex, .(Gender), transform, pos = (cumsum(n) - 0.5 * n))
+k.sex$label = paste0(sprintf("%.0f", k.sex$percent))
+
+k.res = ddply(k.res, .(res_survival), transform, percent = n/sum(n) * 100)
+k.res = ddply(k.res, .(res_survival), transform, pos = (cumsum(n) - 0.5 * n))
+k.res$label = paste0(sprintf("%.0f", k.res$percent))
+
+k.intub = ddply(k.intub, .(intub), transform, percent = n/sum(n) * 100)
+k.intub = ddply(k.intub, .(intub), transform, pos = (cumsum(n) - 0.5 * n))
+k.intub$label = paste0(sprintf("%.0f", k.intub$percent))
+
+k.host = ddply(k.host, .(host_care_level), transform, percent = n/sum(n) * 100)
+k.host = ddply(k.host, .(host_care_level), transform, pos = (cumsum(n) - 0.5 * n))
+k.host$label = paste0(sprintf("%.0f", k.host$percent))
+
+k.rr = ddply(k.rr, .(rr_rts), transform, percent = n/sum(n) * 100)
+k.rr = ddply(k.rr, .(rr_rts), transform, pos = (cumsum(n) - 0.5 * n))
+k.rr$label = paste0(sprintf("%.0f", k.rr$percent))
+
+k.sbp = ddply(k.sbp, .(sbp_rts), transform, percent = n/sum(n) * 100)
+k.sbp = ddply(k.sbp, .(sbp_rts), transform, pos = (cumsum(n) - 0.5 * n))
+k.sbp$label = paste0(sprintf("%.0f", k.sbp$percent))
+
+k.gcs = ddply(k.gcs, .(gcs_sum), transform, percent = n/sum(n) * 100)
+k.gcs = ddply(k.gcs, .(gcs_sum), transform, pos = (cumsum(n) - 0.5 * n))
+k.gcs$label = paste0(sprintf("%.0f", k.gcs$percent))
+
+k.work = ddply(k.work, .(work), transform, percent = n/sum(n) * 100)
+k.work = ddply(k.work, .(work), transform, pos = (cumsum(n) - 0.5 * n))
+k.work$label = paste0(sprintf("%.0f", k.work$percent))
+
+k.weekend = ddply(k.weekend, .(Weekend), transform, percent = n/sum(n) * 100)
+k.weekend = ddply(k.weekend, .(Weekend), transform, pos = (cumsum(n) - 0.5 * n))
+k.weekend$label = paste0(sprintf("%.0f", k.weekend$percent))
+
+k.ct = ddply(k.ct, .(dt_ed_first_ct), transform, percent = n/sum(n) * 100)
+k.ct = ddply(k.ct, .(dt_ed_first_ct), transform, pos = (cumsum(n) - 0.5 * n))
+k.ct$label = paste0(sprintf("%.0f", k.ct$percent))
+
+opportunity_sex <- ggplot(k.sex, aes(x = Gender, y = percent, fill = ofi)) +
+    geom_bar(position = position_stack(), stat = "identity", width = .7) +
+    geom_text(aes(label = label), position = position_stack(vjust = 0.5), size = 4) + labs(y = "Percent (%)", x = "Sex") + guides(fill=guide_legend(title="OFI")) + theme(axis.text.x = element_text(angle = 45, vjust = 0.2, hjust=0.3))
+
+opportunity_survival <- ggplot(k.res, aes(x = res_survival, y = percent, fill = ofi)) +
+    geom_bar(position = position_stack(), stat = "identity", width = .7) +
+    geom_text(aes(label = label), position = position_stack(vjust = 0.5), size = 4) + labs(y = "Percent (%)", x = "Survival (30 days)") + guides(fill=guide_legend(title="OFI")) + rremove("ylab") + theme(axis.text.x = element_text(angle = 45, vjust = 0.2, hjust=0.3))
+
+opportunity_intub <- ggplot(k.intub, aes(x = intub, y = percent, fill = ofi)) +
+    geom_bar(position = position_stack(), stat = "identity", width = .7) +
+    geom_text(aes(label = label), position = position_stack(vjust = 0.5), size = 3) + labs(y = "Percent (%)", x = "Intubation") + rremove("ylab") + theme(axis.text.x = element_text(angle = 45, vjust = 0.2, hjust=0.3))
+
+opportunity_rr <- ggplot(k.rr, aes(x = rr_rts, y = percent, fill = ofi)) +
+    geom_bar(position = position_stack(), stat = "identity", width = .7) +
+    geom_text(aes(label = label), position = position_stack(vjust = 0.5), size = 2) + labs(y = "Percent (%)", x = "Respiratory rate") + guides(fill=guide_legend(title="OFI")) + theme(axis.text.x = element_text(angle = 45, vjust = 0.2, hjust=0.3))
+
+opportunity_sbp <- ggplot(k.sbp, aes(x = sbp_rts, y = percent, fill = ofi)) +
+    geom_bar(position = position_stack(), stat = "identity", width = .7) +
+    geom_text(aes(label = label), position = position_stack(vjust = 0.5), size = 2) + labs(y = "Percent (%)", x = "Systolic blood pressure") + guides(fill=guide_legend(title="OFI")) + rremove("ylab") + theme(axis.text.x = element_text(angle = 45, vjust = 0.2, hjust=0.3))
+
+opportunity_gcs <- ggplot(k.gcs, aes(x = gcs_sum, y = percent, fill = ofi)) +
+    geom_bar(position = position_stack(), stat = "identity", width = .7) +
+    geom_text(aes(label = label), position = position_stack(vjust = 0.5), size = 2.5) + labs(y = "Percent (%)", x = "Glasgow coma scale") + guides(fill=guide_legend(title="OFI")) + rremove("ylab") + theme(axis.text.x = element_text(angle = 45, vjust = 0.2, hjust=0.3))
+
+opportunity_host <- ggplot(k.host, aes(x = host_care_level, y = percent, fill = ofi)) +
+    geom_bar(position = position_stack(), stat = "identity", width = .7) +
+    geom_text(aes(label = label), position = position_stack(vjust = 0.5), size = 3) + labs(y = "Percent (%)", x = "Highest hospital care level") + guides(fill=guide_legend(title="OFI")) + theme(axis.text.x = element_text(angle = 45, vjust = 0.2, hjust=0.3))
+
+pp<- ggarrange(opportunity_sex, opportunity_survival ,opportunity_intub, opportunity_rr, opportunity_sbp, opportunity_gcs,
+          labels = c("A", "B", "C", "D","E","F"),
+          ncol = 3, nrow = 2, common.legend = TRUE, legend = "bottom")
+
+opportunity_host
+pp
+
+```
+
+```{r, include=FALSE}
+e.host<-k.host[!(k.host$ofi=="No opportunity for improvement"),]
+op.host <- ggplot(e.host, aes(x = host_care_level, y = percent, fill = ofi)) +
+    geom_bar(position = "dodge", stat = "identity", width = .7) +
+    geom_text(aes(label = label), position = position_dodge(width = 1),
+    vjust = -0.5, size = 3.5) + labs(y = "%", x = "Highest hospital care level") + guides(fill=guide_legend(title="OFI")) + theme(axis.text.x = element_text(angle = 45, vjust = 0.2, hjust=0.3, size=10, colour = "black"))+ ylim(0, 20)
+op.host
+
+e.sex<-k.sex[!(k.sex$ofi=="No opportunity for improvement"),]
+op.sex <- ggplot(e.sex, aes(x = Gender, y = percent, fill = ofi)) +
+    geom_bar(position = position_stack(), stat = "identity", width = .7) +
+    geom_text(aes(label = label), position = position_dodge(width = 1),
+    vjust = -0.5, size = 3.5) + labs(y = "%", x = "Sex") + guides(fill=guide_legend(title="OFI")) + theme(axis.text.x = element_text(angle = 45, vjust = 0.2, hjust=0.3, size=8, colour = "black")) + ylim(0, 15)
+op.sex
+
+e.res<-k.res[!(k.res$ofi=="No opportunity for improvement"),]
+op.res <- ggplot(e.res, aes(x = res_survival, y = percent, fill = ofi)) +
+    geom_bar(position = position_stack(), stat = "identity", width = .7) +
+    geom_text(aes(label = label), position = position_dodge(width = 1),
+    vjust = -0.5, size = 3.5) + labs(y = "%", x = "Survival after 30 days") + guides(fill=guide_legend(title="OFI")) + theme(axis.text.x = element_text(angle = 45, vjust = 0.2, hjust=0.3, size=10, colour = "black")) + ylim(0, 15)
+op.res
+
+e.intub<-k.intub[!(k.intub$ofi=="No opportunity for improvement"),]
+op.intub <- ggplot(e.intub, aes(x = intub, y = percent, fill = ofi)) +
+    geom_bar(position = position_stack(), stat = "identity", width = .7) +
+    geom_text(aes(label = label), position = position_dodge(width = 1),
+    vjust = -0.5, size = 3.5) + labs(y = "%", x = "Intubation") + guides(fill=guide_legend(title="OFI")) + theme(axis.text.x = element_text(angle = 45, vjust = 0.2, hjust=0.3, size=6, colour = "black")) + ylim(0, 20)
+op.intub
+
+e.rr<-k.rr[!(k.rr$ofi=="No opportunity for improvement"),]
+e.rr[nrow(e.rr) + 1,] <- c("Opportunity for improvement", "6-9", 0,0,0,0)
+e.rr[nrow(e.rr) + 1,] <- c("Opportunity for improvement", "0", 0,0,0,0)
+e.rr$percent<-as.numeric(e.rr$percent)
+op.rr <- ggplot(e.rr, aes(x = rr_rts, y = percent, fill = ofi)) +
+    geom_bar(position = position_stack(), stat = "identity", width = .7) +
+    geom_text(aes(label = label), position = position_dodge(width = 1),
+    vjust = -0.5, size = 3.5) + labs(y = "%", x = "Respiratory rate") + guides(fill=guide_legend(title="OFI")) + theme(axis.text.x = element_text(angle = 45, vjust = 0.2, hjust=0.3, size=10, colour = "black")) + ylim(0, 20)
+op.rr
+
+e.sbp<-k.sbp[!(k.sbp$ofi=="No opportunity for improvement"),]
+e.sbp[nrow(e.sbp) + 1,] <- c("Opportunity for improvement", "1-49", 0,0,0,0)
+e.sbp[nrow(e.sbp) + 1,] <- c("Opportunity for improvement", "0", 0,0,0,0)
+e.sbp[nrow(e.sbp) + 1,] <- c("Opportunity for improvement", "Missing", 0,0,0,0)
+e.sbp$percent<-as.numeric(e.sbp$percent)
+op.sbp <- ggplot(e.sbp, aes(x = sbp_rts, y = percent, fill = ofi)) +
+    geom_bar(position = position_stack(), stat = "identity", width = .7) +
+    geom_text(aes(label = label), position = position_dodge(width = 1),
+    vjust = -0.5, size = 3.5) + labs(y = "%", x = "Systolic blood pressure") + guides(fill=guide_legend(title="OFI")) + theme(axis.text.x = element_text(angle = 45, vjust = 0.2, hjust=0.3, size=10, colour = "black")) + ylim(0, 25)
+op.sbp
+
+e.gcs<-k.gcs[!(k.gcs$ofi=="No opportunity for improvement"),]
+op.gcs <- ggplot(e.gcs, aes(x = gcs_sum, y = percent, fill = ofi)) +
+    geom_bar(position = position_stack(), stat = "identity", width = .7) +
+    geom_text(aes(label = label), position = position_dodge(width = 1),
+    vjust = -0.5, size = 3.5) + labs(y = "%", x = "Glasgow Coma Scale") + guides(fill=guide_legend(title="OFI")) + theme(axis.text.x = element_text(angle = 45, vjust = 0.2, hjust=0.3, size=8, colour = "black")) + ylim(0, 15)
+op.gcs
+
+e.work<-k.work[!(k.work$ofi=="No opportunity for improvement"),]
+op.work <- ggplot(e.work, aes(x = work, y = percent, fill = ofi)) +
+    geom_bar(position = position_stack(), stat = "identity", width = .7) +
+    geom_text(aes(label = label), position = position_dodge(width = 1),
+    vjust = -0.5, size = 3.5) + labs(y = "%", x = "Working hours") + guides(fill=guide_legend(title="OFI")) + theme(axis.text.x = element_text(angle = 45, vjust = 0.2, hjust=0.3, size=12, colour = "black")) + ylim(0, 15)
+op.work
+
+e.weekend<-k.weekend[!(k.weekend$ofi=="No opportunity for improvement"),]
+op.weekend <- ggplot(e.weekend, aes(x = Weekend, y = percent, fill = ofi)) +
+    geom_bar(position = position_stack(), stat = "identity", width = .7) +
+    geom_text(aes(label = label), position = position_dodge(width = 1),
+    vjust = -0.5, size = 3.5) + labs(y = "%", x = "Weekend") + guides(fill=guide_legend(title="OFI")) + theme(axis.text.x = element_text(angle = 45, vjust = 0.2, hjust=0.3, size=12, colour = "black")) + ylim(0, 15)
+op.weekend
+
+e.ct<-k.ct[!(k.ct$ofi=="No opportunity for improvement"),]
+op.ct <- ggplot(e.ct, aes(x = dt_ed_first_ct, y = percent, fill = ofi)) +
+    geom_bar(position = position_stack(), stat = "identity", width = .7) +
+    geom_text(aes(label = label), position = position_dodge(width = 1),
+    vjust = -0.5, size = 3.5) + labs(y = "%", x = "Time to first CT (min)") + guides(fill=guide_legend(title="OFI")) + theme(axis.text.x = element_text(angle = 45, vjust = 0.2, hjust=0.3, size=8, colour = "black")) + ylim(0, 15)
+op.ct
+
+new.bar <- ggarrange(op.sex, op.res ,op.work, op.weekend, op.ct, op.intub,
+          labels = c("A", "B", "C", "D","E","F"),
+          ncol = 3, nrow = 2, common.legend = TRUE, legend = "none")
+new.bar
+
+vital.bar <- ggarrange(op.host, op.rr, op.gcs, op.sbp,
+          labels = c("A", "B", "C", "D","E","F"),
+          ncol = 2, nrow = 2, common.legend = TRUE, legend = "none")
+```
+
+```{r care-level, fig.cap="OFI presented in highest hospital care level, respiratory rate,  Glasgow coma scale and systolic blood pressure. ED: Emergency Department, GW: General Ward, SW: Surgical Ward, HDU: High Dependency Unit, CCU: Critical Care Unit.", echo=FALSE}
+
+vital.bar
+```
+
+Fig.\@ref(fig:restbarchart) displays the proportion of OFI in the remaining categorical factors. There were no major differences between the groups in each factor except in time to first CT and intubation. Higher percentage of OFI was found in patients with time to first CT higher than 30 min compared to patients not intubated or with a time lower than 30 min. Patients intubated in the hospital had a higher percentage of OFI (13.1%) compared to patients not intubated (5.2%) or intubated before arrival at the hospital (7.4%).
+
+\newpage
+```{r restbarchart, fig.cap= "Opportunity for improvement presented in the remaining factors. Intub = Intubated, Pre-intub = Patient intubated before arrival at the emergency department", echo=FALSE}
+
+new.bar
+```
+
+```{r, include=FALSE}
+aa$host_care_level <-
+  factor(aa$host_care_level, levels=c("ED","GW","SW","HDU","CCU"),
+         labels=c("Emergency Department","General Ward","Surgical Ward","High Dependency Unit","Critical Care Unit"))
+label(aa$host_care_level)       <- "Highest hospital care level"
+
+ppp <- ggplot(data = aa, aes(x=ofi, y=ISS)) + 
+             geom_boxplot(aes(fill=ofi))+ labs(x = "OFI") + theme(axis.text.x=element_blank(), axis.title.x = element_blank(),legend.title= element_blank())
+ppp
+
+qqq <- ggplot(data = aa, aes(x=ofi, y=pt_age_yrs)) + 
+             geom_boxplot(aes(fill=ofi)) + labs(y = "Age (Years)", x = "OFI") + theme(axis.text.x=element_blank(), axis.title.x = element_blank(),legend.title= element_blank())
+qqq
+
+new.cont <- ggarrange(ppp,qqq,
+          labels = c("A", "B"),
+          ncol = 2, nrow = 1, common.legend = TRUE, legend = "bottom")
+
+new.cont
+```
+Fig.\@ref(fig:boxchart) compares ISS and age between patients with and without OFI. The median age for patients with OFI is 49.5, which is 7.5 years higher than the median for the group of patients without OFI. The median ISS is also 12 units higher in the OFI-group, 17 compared to 5 in no OFI.
+
+\newpage
+
+```{r boxchart, fig.cap= "Box plot displaying the distribution of patients with OFI and those without in the continuous variables age and ISS", echo=FALSE}
+new.cont
+```
+
+### Adjusted and unadjusted association to OFI
+OFI were identified in `r sum(aa$ofi == "Opportunity for improvement")` (`r round(sum(aa$ofi == "Opportunity for improvement")/nrow(aa)*100, digits = 2)`%) of the patients. The unadjusted and adjusted associations of selected factors with OFI are presented in Table \@ref(tab:var-adjusted). Age, ISS, GCS, time to first CT and highest hospital care level were significantly associated with OFI in both unadjusted and adjusted analyses. The factors respiratory rate, systolic blood pressure and intubation were significantly associated with OFI only in the unadjusted analysis.
+
+After the adjustment for other variables, patients with time to first CT between 61 and 90 minutes had adjusted odds ratio (AOR) of 2.85 (95% CI 1.64-4.96, p<.001). Odds ratio (OR) of 1.97 (95% CI 1.18-3.29, p=.01) was estimated in patients with time to first CT longer than 90 minutes.
+
+Patients treated in a high dependency unit had an unadjusted OR of 13.1 (95% CI 6.78-26.5, p<.001) and AOR of 8.25 (95% CI 4.02-16.9, p<.001) adjusted compared to patients treated in the emergency department. Patients treated in the surgical ward and critical care unit had OR of 9.11 (95% CI 5.25-17.2, p<.001) and 11.7 (95% CI 6.75-22.0, p<.001) versus an AOR of 6.86 (95% CI 3.69-12.8, p<.001) and 6.91 (95% CI 3.41-14.0, p<.001) respectively, compared to patients treated in the ED (Table \@ref(tab:var-adjusted))
+
+```{r j, include=FALSE}
+# Resultat för adjusted variabels
+outcome_log<-glm(ofi~.,data = aa,family = 'binomial')
+summary(outcome_log)
+
+tbl_merge_test <-
+    tbl_merge(tbls = list(aa %>%
+                              select(ofi, pt_age_yrs, Gender, res_survival, rr_rts, sbp_rts, gcs_sum, intub, work, dt_ed_first_ct, Weekend, host_care_level, ISS) %>%
+                              tbl_uvregression(
+                                  method = glm,
+                                  y = ofi,
+                                  method.args = list(family = binomial),
+                                  exponentiate = TRUE,
+                                  pvalue_fun = ~style_pvalue(.x, digits = 2),
+                                  hide_n = TRUE
+                              )%>% bold_p(), tbl_regression(outcome_log,exponentiate = TRUE,pvalue_fun = ~style_pvalue(.x, digits = 2)) %>% bold_p() %>% bold_labels()))
+
+
+hellp<- tbl_merge_test %>% modify_spanning_header(list (estimate_1 ~ "Unadjusted", ci_1 ~ "Unadjusted", p.value_1 ~ "Unadjusted", estimate_2 ~ "Adjusted", ci_2 ~ "Adjusted", p.value_2 ~ "Adjusted"))
+
+flpp <- hellp %>% as_flex_table()
+flpp <- set_table_properties(flpp, width = .8, layout = "autofit")
+
+flpp <- theme_vanilla(flpp)
+flpp <- set_caption(flpp, caption = "Adjusted and unadjusted factors")
+flpp <- add_footer_lines(flpp, "Multivariable logistic regression analysis of the association between set variables and OFI")
+```
+
+```{r var-adjusted, echo=FALSE, message=FALSE, warning=FALSE, fig.align='center'}
+flpp
+```
+
+
+# Discussion
+
+This study found that age, highest hospital care level, ISS, GCS, respiratory rate, systolic blood pressure, time to first CT and intubation are associated with OFI in adult trauma patients. In contrast to previous research on sex-based disparities in trauma patient outcome [@Marcolini2019;@Duong2020], this study did not find sex to be significantly associated with OFI. Neither the time nor weeekday of arrival were significantly associated with OFI.
+
+The factor most strongly associated with OFI was highest hospital care level with an OR of 13.1 and 11.7 in high dependency units and critical care units, respectively. This means that OFI are much more common in the care of patients treated in the high dependency units and critical care units compared to in the care of those treated in the emergency department. A previous study in the US has shown that more than half of the preventable and probably preventable deaths occur in critical care units [@Teixeira2007]. This could be explained by the complexity, severeness and amount of intervention needed for the patients treated in these units.
+
+According to the same study the most prevalent OFI were related to airway management and perioperative care and those patients are usually found in critical care units [@Teixeira2009]. The patients in high dependency units are also complex, although these wards lack the access to the same amount of resources and personnel as the critical care units. This could explain why the odds ratio of OFI is even higher in high dependency units compared to critical care units. Patients with emergency department as the highest hospital care level usually have less severe trauma and therefore require less interventions which in turn leads to lower odds of OFI.
+
+OFI was identified in 7.4% of all trauma deaths at Karolinska University Hospital. A study published in 2018 from the same hospital identified at least one preventable error in 21% of all trauma deaths, although only 4% of all trauma deaths were found to be preventable [@Ghorbani2018]. A likely explanation for the lower number of OFI in those who died in our study compared to the previous study was the criteria used to determine the presence of OFI differed, although the adoption of new treatment strategies and the implementation of quality improvement programs could also have played a role.
+
+Time to first CT was also significantly associated with OFI. The highest OR was found in the group 61-90 minutes to CT with an OR of 2.85 compared to patients that did not undergo CT. This is however more complex in reality since CT is not a priority when acute intervention is needed in severe trauma patients. It is therefore unknown if the delay to CT is the cause of OFI or the opposite. A previous study conducted in Japan had similar findings. That study found that delays of the first CT conducted after arrival at the emergency department in patients with blunt traumatic aortic injury were associated with a higher mortality rate [@Katayama2018]. As CT is a vital part of diagnosis, delays of CT often lead to delays in the diagnosis and treatment, negatively affecting the outcome. This is demonstrated by Clarke et al among hypotensive patients on arrival in the ED with major injures and in need of intervention [@Clarke2002]. All considered, delays of the first CT should be avoided unless life-saving procedures are needed to better the outcome for the patient.
+
+Other factors significantly associated with OFI were age and ISS. The median age was eight years higher in patients with OFI. The comorbidity, frailty and differences in clinical presentation of the elderly could be an explanation for higher odds of OFI in these patients. Previous studies have found higher mortality in elderly patients even though there were no major differences in ISS compared to younger patients [@MacDonald_2020; @Earl_Royal_2016].
+
+The median ISS was 17 in the group with OFI compared to five in patients with no OFI, meaning that OFI are more likely to be identified in patients with more complex trauma. Similar findings were found in two studies performed in Germany. These studies showed higher numbers of OFI in patients with ISS > 15 compared to the whole population. In a study in Cologne the preventable and potentially preventable death rate was estimated to 20.2% of all trauma deaths in patients with ISS > 15 [@Schoeneberg2016]. When calculating the same numbers in Berlin for all patients, regardless of ISS, they were estimated to be 15.1% of all trauma deaths [@Kleber2013]. This could be due to the complexity of these severe patient cases, the lack of training or protocols in the care of patients with severe injuries. Another explanation could be due to lack of resources needed for the treatment of severe injuries.
+
+Systolic blood pressure 50-75, 76-89 and respiratory rate >29 were significantly associated with OFI in unadjusted analyses. A study performed in Iran showed similar findings when comparing preventable deaths between patients with a respiratory rate <20 and 20 or higher. It was found that deaths in patients with 20 or higher in respiratory rate were more likely to be preventable [@Davoodabadi2021]. Patients intubated after arriving at the hospital had also increased odds of OFI compared to patients not intubated. Higher odds of OFI in these patients could be explained by the severeness of these traumas. This would also explain why these factors are not statistically significant after the adjustment for other variables.
+
+Our study had several limitations. Although all trauma 1 patients were reviewed by specialized nurses, the selection for review by the morbidity and mortality conference relied mostly on audit filters, meaning that there is a possibility some patients with OFI were not selected for review by the conference and therefore registered as a patient with no OFI. Furthermore this study was a single centre study, and the results illustrates the situation in Stockholm.
+
+In conclusion, the care of patients with more severe trauma leading to abnormal vital signs and higher hospital care level was found to be significantly associated with OFI after adjusting for other factors. Future research should focus on identifying reasons why the care of patients with severe trauma is more susceptible for OFI and how this can be alleviated.
+
+
+\newpage
+
+# References
