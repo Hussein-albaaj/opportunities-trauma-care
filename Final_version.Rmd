@@ -79,6 +79,7 @@ detach(datasets)
 combined.datasets<-filter(combined.datasets, as.Date(strptime(combined.datasets$Ankomst_te.x, format = "%Y%m%d %H:%M")) >="2017-01-01")
 ```
 
+
 ```{r include=FALSE}
 # Dela ankosttidskolumnen till datum och tid
 combined.datasets[c('Datum', 'Time')] <- str_split_fixed(combined.datasets$Ankomst_te.x, ' ', 2)
@@ -348,106 +349,6 @@ p.MoM.ofi <- round((n.MoM.ofi/n.qd)*100,digits=2)
 n.allneg.no.ofi <- nrow(dataset.clean.af)-n.df - n.annat - n.audit.qd - 1
 n.2nurse.no.ofi <- n.annat + n.audit.qd - n.MoM
 ```
-```{r, include=FALSE}
-DiagrammeR::grViz("
-digraph graph2 {
-graph [layout = dot, rankdir = RR]
-# node definitions with substituted label text
-node [width = 4, fillcolor = Biege, shape = rectangle]
-swetrau [label = '@@1']
-qd [label = '@@2']
-audit [label = '@@3']
-annat [label = '@@4']
-nurse [label = '@@5']
-MoM [label = '@@6']
-MoMnoofi [label = '@@7', shape = plaintext, width = 0]
-df [label = '@@8']
-ofi [label = '@@9']
-noofi [label = '@@10']
-dfofi [label = '@@11', shape = plaintext, width = 0]
-dfnoofi [label = '@@12', shape = plaintext, width = 0]
-nursenoofi [label = '@@13', shape = plaintext, width = 0]
-allneg [label = '@@14', shape = plaintext, width = 0]
-MoMofi [label = '@@15', shape = plaintext, width = 0]
-allnegofi [label = '@@16', shape = plaintext, width = 0]
-swetrau -> qd -> audit -> nurse -> MoM -> MoMnoofi -> noofi
-qd -> annat -> nurse
-MoM -> MoMofi -> ofi
-swetrau -> df -> dfofi -> ofi
-df -> dfnoofi -> noofi
-nurse -> nursenoofi -> noofi
-qd -> allneg -> noofi
-qd -> allnegofi -> ofi
-}
-[1]: paste0('Trauma Quality database (n = ', nrow(dataset.clean.af), ')')
-[2]: paste0('Manual Review and Audit filters (n = ', nrow(dataset.clean.af)-n.df, ')')
-[3]: paste0('Selected via Audit filters (n = ', n.audit.qd, ')')
-[4]: paste0('Selected via review by a nurse (n = ', n.annat, ')')
-[5]: paste0('Review by two nurses (n = ', n.annat + n.audit.qd, ')')
-[6]: paste0('Morbidity conference (n = ', n.MoM, ')')
-[7]: paste0('(n = ', n.MoM.no.ofi, ')')
-[8]: paste0('Mortality conferance (n = ', n.df, ')')
-[9]: paste0('OFI (n = ', n.df.ofi + n.MoM.ofi + n.allneg.ofi, ')')
-[10]: paste0('no OFI (n = ', n.df.no.ofi + n.MoM.no.ofi + n.2nurse.no.ofi + n.allneg.no.ofi,  ')')
-[11]: paste0('(n = ', n.df.ofi, ')')
-[12]: paste0('(n = ', n.df.no.ofi, ')')
-[13]: paste0('(n = ', n.2nurse.no.ofi, ')')
-[14]: paste0('(n = ', n.allneg.no.ofi, ')')
-[15]: paste0('(n = ', n.MoM.ofi, ')')
-[16]: paste0('(n = ', n.allneg.ofi, ')')
-") %>% DiagrammeRsvg::export_svg() %>% charToRaw() %>% rsvg::rsvg_pdf("ofi-flowchart.pdf")
-```
-
-```{r}
-DiagrammeR::grViz("
-digraph graph2 {
-graph [layout = dot, rankdir = RR]
-# node definitions with substituted label text
-node [width = 4, fillcolor = Biege, shape = rectangle]
-swetrau [label = '@@1']
-qd [label = '@@2']
-audit [label = '@@3']
-annat [label = '@@4']
-nurse [label = '@@5']
-MoM [label = '@@6']
-MoMnoofi [label = '@@7', shape = plaintext, width = 0]
-df [label = '@@8']
-ofi [label = '@@9']
-noofi [label = '@@10']
-dfofi [label = '@@11', shape = plaintext, width = 0]
-dfnoofi [label = '@@12', shape = plaintext, width = 0]
-nursenoofi [label = '@@13', shape = plaintext, width = 0]
-allneg [label = '@@14', shape = plaintext, width = 0]
-MoMofi [label = '@@15', shape = plaintext, width = 0]
-allnegofi [label = '@@16', shape = plaintext, width = 0]
-swetrau -> qd -> audit -> nurse -> MoM -> MoMnoofi -> noofi
-qd -> annat -> nurse
-MoM -> MoMofi -> ofi
-swetrau -> df -> dfofi -> ofi
-df -> dfnoofi -> noofi
-nurse -> nursenoofi -> noofi
-qd -> allneg -> noofi
-qd -> allnegofi -> ofi
-}
-[1]: paste0('Trauma Quality database (n = ', nrow(dataset.clean.af), ')')
-[2]: paste0('Manual Review and Audit filters (n = ', nrow(dataset.clean.af)-n.df, ')')
-[3]: paste0('Selected via Audit filters (n = ', n.audit.qd, ')')
-[4]: paste0('Selected via review by a nurse (n = ', n.annat, ')')
-[5]: paste0('Review by two nurses (n = ', n.annat + n.audit.qd, ')')
-[6]: paste0('Morbidity conference (n = ', n.MoM, ')')
-[7]: paste0('(n = ', n.MoM.no.ofi, ')')
-[8]: paste0('Mortality conferance (n = ', n.df, ')')
-[9]: paste0('OFI (n = ', n.df.ofi + n.MoM.ofi + n.allneg.ofi, ')')
-[10]: paste0('no OFI (n = ', n.df.no.ofi + n.MoM.no.ofi + n.2nurse.no.ofi + n.allneg.no.ofi,  ')')
-[11]: paste0('(n = ', n.df.ofi, ')')
-[12]: paste0('(n = ', n.df.no.ofi, ')')
-[13]: paste0('(n = ', n.2nurse.no.ofi, ')')
-[14]: paste0('(n = ', n.allneg.no.ofi, ')')
-[15]: paste0('(n = ', n.MoM.ofi, ')')
-[16]: paste0('(n = ', n.allneg.ofi, ')')
-") %>% DiagrammeRsvg::export_svg() %>% charToRaw() %>% rsvg::rsvg_png("figure_1.jpg")
-```
-
 
 ```{r include=FALSE}
 # Gör om till faktorer
@@ -535,7 +436,7 @@ aa$intub <-
 
 aa$host_care_level <-
   factor(aa$host_care_level, levels=c("1","2","3","4","5"),
-         labels=c("Emergency Department","General Ward","Surgical Ward","High Dependency Unit","Critical Care Unit"))
+         labels=c("Emergency Department","General Ward","Operating Theater","High Dependency Unit","Critical Care Unit"))
 
 aa$sbp_rts <-
   factor(aa$sbp_rts, levels=c("4","3","2","1","0","5"),
@@ -597,11 +498,11 @@ rownames(sewe)[rownames(sewe) == "DOA"] = "Dead On Arrival"
 
 *Background*: Trauma is one of the leading causes of morbidity and mortality worldwide. Morbidity and mortality review of selected patient cases is used to improve the quality of trauma care by identifying opportunities for improvement (OFI). The aim of this study was to assess how patient and process factors are associated with OFI in trauma care.
 
-*Methods*: We conducted a registry based study using all patients between 2017 and 2021 from the Karolinska University Hospital that had been reviewed regarding the presence of OFI as defined by a morbidity and mortality conference. We used bi- and multivariable logistic regression to assess the associations between the following patient and process factors and OFI: age, sex, respiratory rate, systolic blood pressure, Glasgow Coma Scale (GCS), Injury Severity Score (ISS), survival at 30 days, highest hospital care level, working hours, weekend, intubation status and time to CT and intervention.
+*Methods*: We conducted a registry based study using all patients between 2017 and 2021 from the Karolinska University Hospital who had been reviewed regarding the presence of OFI as defined by a morbidity and mortality conference. We used bi- and multivariable logistic regression to assess the associations between the following patient and process factors and OFI: age, sex, respiratory rate, systolic blood pressure, Glasgow Coma Scale (GCS), Injury Severity Score (ISS), survival at 30 days, highest hospital care level, working hours, weekend, intubation status and time to first computed tomography (CT) and intervention.
 
-*Results*: OFI was identified in 300 (5.8%) out of 5182 patients. The median age for patients with OFI was 49 compared to 42 in patients without OFI. Age, highest hospital care level, ISS, respiratory rate, systolic blood pressure, GCS, survival after 30 days and intubation were statistically significantly associated with OFI.
+*Results*: OFI was identified in 300 (5.8%) out of 5182 patients. Age, highest hospital care level, ISS, respiratory rate, systolic blood pressure, GCS, survival after 30 days, intubation and time to first CT were statistically significantly associated with OFI.
 
-*Conclusion*: Several patient and process factors were found to be associated with OFI, indicating that patients with moderate to severe trauma are at the highest odds of OFI. Future research should focus on identifying reasons why these factors are associated with higher odds of OFI.
+*Conclusion*: Several patient and process factors were found to be associated with OFI, indicating that patients with moderate to severe trauma are at the highest odds of OFI. Delays to first CT more than 30 minutes was also found to be connected to higher odds of OFI, however no connection was found dependent of arrival inside or outside business hours. 
 
 \newpage
 
@@ -621,7 +522,7 @@ Whereas numerous studies assess associations between patient and process factors
 We used data from the Karolinska University Hospital trauma registry, which reports to the Swedish National Trauma Registry [@Swetrau2020], as well as the hospital’s local trauma care quality database. The content of the trauma registry has been previously described [@Ringdal2008]. From 2017 and onwards the trauma care quality database includes all patients in the trauma registry as well as the results of the morbidity and mortality review including OFI. We linked the trauma registry and trauma care quality database using personal identification numbers and extracted factors potentially associated with OFI. We used bi- and multivariable logistic regression to determine associations between these factors and OFI.
 
 ### Setting
-All major trauma patients are prehospital triaged to the Karolinska University Hospital in Stockholm, an equivalent to a level one trauma center, with direct access to radiology, intervention, surgery, intensive care and consultants in all associated specialities [@Social2015; @NKS2020]. All trauma patients presenting to Karolinska University Hospital are included in a morbidity and mortality screening process using a combination of individual review by specialised nurses and audit filters. The audit filters, shown in table \@ref(tab:audit-filters), are used to identify patients in which OFI are more likely. If the specialized nurses judge that there is a potential OFI, the patient is discussed at a morbidity and mortality conference. During the multidisciplinary conferences the patient cases are reviewed by experienced specialists from all the disciplines and professions involved in the trauma care. The presence or absence of OFI is a consensus decision among all participants of the conference and is recorded in the trauma care quality database.
+All major trauma patients are triaged to the Karolinska University Hospital in Stockholm, an equivalent to a level one trauma center[@American2015], with direct access to radiology, intervention, surgery, intensive care and consultants in all associated specialities [@Social2015; @NKS2020]. All trauma patients presenting to Karolinska University Hospital are included in a morbidity and mortality screening process using a combination of individual review by specialised nurses and audit filters. The audit filters, shown in table \@ref(tab:audit-filters), are used to identify patients in which OFI are more likely. If the specialized nurses judge that there is a potential OFI, or if the patient did not survive 30 days after the trauma, then the patient is discussed at a morbidity and mortality conference. During the multidisciplinary conferences the patient cases are reviewed by experienced specialists from all the disciplines and professions involved in the trauma care. The presence or absence of OFI is a consensus decision among all participants of the conference and is recorded in the trauma care quality database.
 
 \newpage
 
@@ -645,29 +546,22 @@ The outcome was the presence of OFI, as decided by the morbidity and mortality c
 
 **Patient and process factors**
 \newline
-We selected factors from the trauma registry, based on the locally used audit filters shown in table \@ref(tab:audit-filters), standard epidemiological factors and factors frequently registered in the Swedish National Trauma Registry. The categorical factors were sex, survival after 30 days, highest hospital care level, Glasgow Coma Scale (GCS) score, respiratory rate, systolic blood pressure, working hours, weekend, time from arrival at the hospital until first CT and if the patient was intubated. We also included the continuous factors age and ISS.
+We selected factors from the trauma registry, based on the locally used audit filters shown in table \@ref(tab:audit-filters), standard epidemiological factors and factors frequently registered in the Swedish National Trauma Registry. The categorical factors were sex, survival after 30 days, highest hospital care level, Glasgow Coma Scale (GCS) score, respiratory rate, systolic blood pressure, working hours, weekend, time from arrival at the hospital until first computed tomography (CT) and if the patient was intubated. We also included the continuous factors age and ISS.
 
 In the trauma registry, both systolic blood pressure and respiratory rate are registered as either a continuous value or a Revised Trauma Score category [@CHAMPION1989]. We converted the continuous values of systolic blood pressure and respiratory rate, if registered, and GCS score into the corresponding Revised Trauma Score category. For missing values for respiratory rate and GCS score, prehospital pre-intubation values were used.
 
-The factor highest hospital care level is divided into five categories: Emergency Department, General Ward, Surgical Ward, High Dependency Unit and Critical Care Unit. High Dependency Units are wards with more extensive monitoring compared to a regular surgical ward. Patients with multi-organ failure or who require mechanical ventilation are admitted to Critical Care Units.
+The factor highest hospital care level is divided into five categories: emergency department, general ward, operating theater, high dependency unit and critical care unit. high dependency units are wards with more extensive monitoring. Patients with multi-organ failure or who require mechanical ventilation are admitted to critical care units.
 
-We also included factors denoting if the patient arrived to hospital during working hours, defined as between 8.00 a.m. and 5 p.m, or during a weekend, defined as Saturday or Sunday.
+Factors denoting if the patient arrived to hospital during working hours were included, defined as between 8.00 a.m. and 5 p.m, or during a weekend, defined as Saturday or Sunday.
 
 ### Statistical analysis
-We performed a complete case analysis after handling missing values in systolic blood pressure, respiratory rate, and GCS score as described above. We present sample characteristics using descriptive statistics. We used bivariable logistic regression to determine unadjusted associations and multivariable logistic regression to determine adjusted associations between patient and process factors and OFI. We present odds ratios (OR) with associated 95% confidence interval. We used a significance level of 5%. The programming language R was used for all analyses [@Rstudio2022]. All statistical analysis were first done on synthetic data and later implemented on the data collected from the trauma registry and the trauma care quality database to ensure objectivity.
+A complete case analysis was conducted after handling missing values in systolic blood pressure, respiratory rate, and GCS score as described above. We present sample characteristics using descriptive statistics. Bivariable logistic regression was used to determine unadjusted associations and multivariable logistic regression to determine adjusted associations between patient and process factors and OFI. We present odds ratios (OR) with associated 95% confidence interval. A significance level of 5% was used. The programming language R was used for all analyses [@Rstudio2022]. All statistical analysis were first done on synthetic data and later implemented on the data collected from the trauma registry and the trauma care quality database to ensure objectivity.
 
 # Results
 
-Out of `r nrow(combined.datasets)` patients included in both the trauma registry and trauma care quality database between 2017 and 2021, `r nrow(combined.datasets)-nrow(ki)` patients were excluded due to missing data or age under 15, leaving a total of `r nrow(ki)` patients eligible for the study. The factor with the highest frequency of missing data was `r rownames(sewe[sewe$missing == sewe[1,1],])` , for which values was missing in `r sewe[1,1]` (`r round(sewe[1,1]/nrow(combined.datasets)*100, digits = 1)`%) patients. The number of patients with missing data in each factor is shown in Table \@ref(tab:missing-data).
+Out of `r nrow(combined.datasets)` patients included in both the trauma registry and trauma care quality database between 2017 and 2021, `r nrow(combined.datasets)-nrow(ki)` patients were excluded due to missing data or age under 15, leaving a total of `r nrow(ki)` patients eligible for the study. The factor with the highest frequency of missing data was `r rownames(sewe[sewe$missing == sewe[1,1],])` , for which values was missing in 168 (3.2%) patients, however those patients were included. 26 out of the 34 patients not eligible for the study was due to dead on arrival.
 
-
-```{r missing-data, fig.cap="Note that the total number of missing values is more than the total number of patients as some patients may have missing values in more than one factor", echo = FALSE, fig.align='center'}
-missing_table <- knitr::kable(sewe[,1:2], format = "markdown", caption = "<strong> Missing  values in each factor</strong>", footnote = "Some patients may have missing values in more than one factor.")
-
-missing_table
-```
-
-The baseline characteristics are presented in Table \@ref(tab:sample-characteristics). Among the `r nrow(aa)` included patients, `r sum(aa$ofi == "Opportunity for improvement")` (`r round(sum(aa$ofi == "Opportunity for improvement")/nrow(aa)*100, digits = 2)`%) patients had OFI. `r opo[3,4]` were male and the median age was `r opo[7,4]`. The median ISS was `r opo[23,4]`. The number of patients who arrived outside of working hours was `r opo[40,4]`, and `r opo[43,4]`patients arrived during weekends. A total of `r opo[10,4]` patients died within 30 days. Fig.\@ref(fig:care-level)A-J show the distributions of OFI across the categorical factors.
+The baseline characteristics are presented in Table \@ref(tab:sample-characteristics). Among the `r nrow(aa)` included patients, `r sum(aa$ofi == "Opportunity for improvement")` (`r round(sum(aa$ofi == "Opportunity for improvement")/nrow(aa)*100, digits = 2)`%) patients had OFI. `r opo[3,4]` were male and the median age was `r opo[7,4]`. The median ISS was `r opo[23,4]`. The number of patients who arrived outside of working hours was `r opo[40,4]`, and `r opo[42,4]`patients arrived during weekends. A total of `r opo[10,4]` patients died within 30 days.
 
 ```{r sample-characteristics, fig.align='center', echo = FALSE}
 
@@ -681,8 +575,8 @@ table2_t
 \newpage
 ```{r, include=FALSE}
 aa$host_care_level <-
-  factor(aa$host_care_level, levels=c("Emergency Department","General Ward","Surgical Ward","High Dependency Unit","Critical Care Unit"),
-         labels=c("ED","GW","SW","HDU","CCU"))
+  factor(aa$host_care_level, levels=c("Emergency Department","General Ward","Operating Theater","High Dependency Unit","Critical Care Unit"),
+         labels=c("ED","GW","OT","HDU","CCU"))
 
 aa$intub <-
   factor(aa$intub, levels=c("None","Pre-hospital", "Emergency department"),
@@ -889,7 +783,7 @@ vital.bar <- ggarrange(op.host, op.rr, op.gcs, op.sbp,
           labels = c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J"),
           ncol = 2, nrow = 2, common.legend = TRUE, legend = "none")
 ```
-```{r care-level, fig.cap="OFI presented in highest hospital care level, respiratory rate,  Glasgow coma scale and systolic blood pressure. ED: Emergency Department, GW: General Ward, SW: Surgical Ward, HDU: High Dependency Unit, CCU: Critical Care Unit.", echo=FALSE}
+```{r include=FALSE, fig.cap="OFI presented in highest hospital care level, respiratory rate,  Glasgow coma scale and systolic blood pressure. ED: Emergency Department, GW: General Ward, OT: Operating Theater, HDU: High Dependency Unit, CCU: Critical Care Unit.", echo=FALSE}
 
 grid.arrange(op.host, op.ct, op.intub, op.gcs, op.rr, op.sbp, op.sex, op.res ,op.work, op.weekend, layout_matrix = rbind(c(1,1,1,1,2,2,2,2,3,3,3,3),
                                                c(4,4,4,4,5,5,5,5,6,6,6,6),
@@ -897,84 +791,42 @@ grid.arrange(op.host, op.ct, op.intub, op.gcs, op.rr, op.sbp, op.sex, op.res ,op
 
 ```
 
-The unadjusted and adjusted associations of selected factors with OFI are shown in \@ref(tab:var-adjusted).
 
 
-```{r j, include=FALSE}
-aa$intub <-
-  factor(aa$intub, levels=c("None","Pre", "ED"),
-         labels=c("None","Pre-hospital",
-                  "Emergency department"))
+The following factors were significantly associated with OFI only in the unadjusted analysis: A respiratory rate higher than 29 compared to a respiratory rate between 10 and 29 (OR 2.11, 95% CI 1.25-3.37, p-value 0.003), a systolic blood pressure between 50 and 75 (OR 4.05, 95% CI 1.62-8.82, p-value 0.001) and between 76 and 89 (OR 2.40, 95% CI 1.10-4.62, p-value 0.016) compared to a systolic blood pressure of more than 89, and intubation in the emergency department compared to no intubation (OR 2.72, 95% CI 1.89-3.83, p-value <0.001).
 
-aa$host_care_level <-
-  factor(aa$host_care_level, levels=c("ED","GW","SW","HDU","CCU"),
-         labels=c("Emergency Department","General Ward","Surgical Ward","High Dependency Unit","Critical Care Unit"))
+Age (aOR 1.01, 95% CI 1.00-1.01, p-value 0.008) and ISS (aOR 1.05, 95% CI 1.04-1.07, p-value < 0.001) were significantly associated with higher odds of OFI in both the unadjusted and adjusted analysis. A GCS between 9 and 12 was in the unadjusted analysis significantly associated with higher odds of OFI compared to a GCS between 13 and 15 (OR 1.77, 95% CI 1.06-2.78, p-value 0.020). In the adjusted analysis however, only missing GCS was significantly associated with lower odds of OFI (aOR 0.33, 95% CI 0.12-0.94, p-value 0.038) whereas a GCS between 9 and 12 was not significantly associated with lower odds of OFI (aOR 0.89, 95% CI 0.52-1.52, p-value 0.67).
 
-label(aa$host_care_level)       <- "Highest hospital care level"
-label(aa$intub)       <- "Intubation"
-label(aa$gcs_sum)       <- "Glasgow Coma Scale"
+A time to first CT between 31 and 60 minutes was in the unadjusted analysis significantly associated with higher odds of OFI compared to no CT (OR 1.66, 95% CI 1.06-2.70, p-value 0.032). This association remained significant in the adjusted analysis (OR 1.75, 95% CI 1.08-2.86, p-value 0.024), but in this analysis a time between 61 and 90 minutes (aOR 2.85, 95% CI 1.64-4.96, p-value < 0.001) and a time over 90 minutes (aOR 1.97, 95% CI 1.18-3.29, p-value 0.010) were also associated with significantly higher odds of OFI.
 
-# Resultat för adjusted variabels
-outcome_log<-glm(ofi~.,data = aa,family = 'binomial')
-summary(outcome_log)
+Compared to care in the emergency department, all higher levels of care were significantly associated with higher odds of OFI in both the unadjusted and adjusted analyses. The highest odds were found in patients treated in a High Dependency Unit (aOR 8.25, 95% CI 4.02-16.9, p-value < 0.001).
 
-tbl_merge_test <-
-    tbl_merge(tbls = list(aa %>%
-                              select(ofi, pt_age_yrs, Gender, res_survival, rr_rts, sbp_rts, gcs_sum, intub, work, dt_ed_first_ct, Weekend, host_care_level, ISS) %>%
-                              tbl_uvregression(
-                                  method = glm,
-                                  y = ofi,
-                                  method.args = list(family = binomial),
-                                  exponentiate = TRUE,
-                                  pvalue_fun = ~style_pvalue(.x, digits = 2),
-                                  hide_n = TRUE
-                              )%>% bold_p(), tbl_regression(outcome_log,exponentiate = TRUE,pvalue_fun = ~style_pvalue(.x, digits = 2)) %>% bold_p() %>% bold_labels()))
-
-
-hellp<- tbl_merge_test %>% modify_spanning_header(list (estimate_1 ~ "Unadjusted", ci_1 ~ "Unadjusted", p.value_1 ~ "Unadjusted", estimate_2 ~ "Adjusted", ci_2 ~ "Adjusted", p.value_2 ~ "Adjusted"))
-
-flpp <- hellp %>% as_flex_table()
-flpp <- set_table_properties(flpp, width = .8, layout = "autofit")
-
-flpp <- theme_vanilla(flpp)
-flpp <- set_caption(flpp, caption = "Adjusted and unadjusted factors")
-flpp <- add_footer_lines(flpp, "Multivariable logistic regression analysis of the association between set factors and OFI")
-```
-
-```{r var-adjusted, echo=FALSE, message=FALSE, warning=FALSE, fig.align='center'}
-flpp
-```
-
-The following factors were significantly associated with OFI only in the unadjusted analysis: A respiratory rate higher than 29 compared to a respiratory rate between 10 and 29 (OR 2.11, 95% CI 1.25, 3.37, p-value 0.003), a systolic blood pressure between 50 and 75 (OR 4.05, 95% CI 1.62, 8.82, p-value 0.001) and between 76 and 89 (OR 2.40, 95% CI 1.10, 4.62, p-value 0.016) compared to a systolic blood pressure of more than 89, and intubation in the emergency department compared to no intubation (OR 2.72, 95% CI 1.89, 3.83, p-value <0.001).
-
-Age (aOR 1.01, 95% CI 1.00-1.01, p-value 0.008) and ISS (aOR 1.05, 95% CI 1.04, 1.07, p-value < 0.001) were significantly associated with higher odds of OFI in both the unadjusted and adjusted analysis. A GCS between 9 and 12 was in the unadjusted analysis significantly associated with higher odds of OFI compared to a GCS between 13 and 15 (OR 1.77, 95% CI 1.06, 2.78, p-value 0.020). In the adjusted analysis however, only missing GCS was significantly associated with lower odds of OFI (aOR 0.33, 95% CI 0.12, 0.94, p-value 0.038) whereas a GCS between 9 and 12 was not significantly associated with lower odds of OFI (aOR 0.89, 95% CI 0.52, 1.52, p-value 0.67).
-
-A time to first CT between 31 and 60 minutes was in the unadjusted analysis significantly associated with higher odds of OFI compared to no CT (OR 1.66, 95% CI 1.06, 2.70, p-value 0.032). This association remained significant in the adjusted analysis (OR 1.75, 95% CI 1.08, 2.86, p-value 0.024), but in this analysis a time between 61 and 90 minutes (aOR 2.85, 95% CI 1.64, 4.96, p-value < 0.001) and a time over 90 minutes (aOR 1.97, 95% CI 1.18, 3.29, p-value 0.010) were also associated with significantly higher odds of OFI.
-
-Compared to care in the emergency department, all higher levels of care were significantly associated with higher odds of OFI in both the unadjusted and adjusted analyses. The highest odds were found in patients treated in a High Dependency Unit (aOR 8.25, 95% CI 4.02, 16.9, p-value < 0.001).
-
-Sex, survival after 30 days, working hours, and weekend were not significantly associated with OFI in neither the unadjusted nor the adjusted analysis.
+Sex, survival after 30 days, weekday or weekend of arrival and business time or not during arrival were not significantly associated with OFI in neither the unadjusted nor the adjusted analysis.
 
 
 \newpage
 # Discussion
 
-This study found that age, highest hospital care level, ISS, GCS, respiratory rate, systolic blood pressure, time to first CT and intubation are associated with OFI in adult trauma patients. In contrast to previous research on sex-based disparities in trauma patient outcome [@Marcolini2019;@Duong2020], this study did not find sex to be significantly associated with OFI. Neither the time nor weeekday of arrival were significantly associated with OFI.
+This study found that age, highest hospital care level, ISS, GCS, respiratory rate, systolic blood pressure, time to first CT and intubation are associated with OFI in adult trauma patients. In contrast to previous research on sex-based disparities in trauma patient outcome [@Marcolini2019;@Duong2020], this study did not find sex to be significantly associated with OFI. Arriving inside or outside of business hours did not either have an effect on the outcome.[@Sutherland2021;@Saqib2020;@Carmody2002]
 
-The factor most strongly associated with OFI was being treated in high dependency units or critical care units, . This means that OFI are more common in the care of patients treated in these units compared to in the care of those treated and dismissed from the emergency departement. A previous study in the US has shown that more than half of the preventable and probably preventable deaths occur in critical care units [@Teixeira2007]. This could be explained by the complexity, severeness and amount of intervention needed for the patients treated in these units.
+The factor most strongly associated with OFI was being treated in high dependency units or critical care units. This means that OFI are more common in the care of patients treated in these units compared to in the care of those treated and dismissed from the emergency department. A previous study in the US has shown that more than half of the preventable and probably preventable deaths occur in critical care units [@Teixeira2007]. This could be explained by the complexity, severeness and amount of intervention needed for the patients treated in these units.
 
-According to the same study the most prevalent OFI were related to airway management and perioperative care and patients requiring these interventions are usually found in critical care units[@Teixeira2009]. The patients in high dependency units are also complex, although these wards lack the access to the resources and personnel found in critical care units. This could explain why the odds ratio of OFI is higher in high dependency units compared to critical care units. The low frequency of OFI in patiens treated in the emergency department as the highest hospital care level can be explained by these patients having less severe trauma and therefore not requiring interventions and hospital admission.
+According to the same study the most prevalent OFI were related to airway management and perioperative care and patients requiring these interventions are usually found in critical care units[@Teixeira2009]. The patients in high dependency units are also complex, although these wards lack the access to the resources and personnel found in critical care units. This could explain why the odds ratio of OFI is higher in high dependency units compared to critical care units, although it is important to keep in mind the low amount of patients treated at high dependency units included in the study. The low frequency of OFI in patients treated in the emergency department as the highest hospital care level can be explained by these patients having less severe trauma and therefore not requiring interventions and hospital admission.
 
-Time to first CT was significantly associated with higher odds of OFI and has in previous studies been associated with poor outcomes [@Katayama2018]. This association is complex because CT is not a priority when acute intervention is needed, and even if the delay to CT could be the cause of OFI it could also be that patients with a longer time to CT have more interventions and are therefore more prone to OFI. Age was significantly associated with higher odds of OFI and the median age was eight years higher in patients with OFI. The comorbidity, frailty, and differences in clinical presentation of the elderly could be an explanation for higher odds of OFI in these patients. Previous studies have found higher mortality in elderly patients even though there were no major differences in injury severity compared to younger patients [@MacDonald_2020; @Earl_Royal_2016].
+Time to first CT >30 min was significantly associated with higher odds of OFI. Delays to CT in trauma patients has in previous studies been associated with poor outcomes [@Katayama2018]. A study recently made in Japan found that CT within 10 minutes after arrival of severe trauma patients was associated with decreased in-hospital mortality [@Yamamoto2023]. This association is complex because CT is not a priority when acute intervention is needed, and even if the delay to CT could be the cause of OFI it could also be that patients with a longer time to CT have more interventions and are therefore more prone to OFI. 
 
-We also found ISS to be significantly associated with OFI and the median ISS was 17 in the group with OFI compared to five in patients without OFI, meaning that OFI are more likely in patients with severe trauma. Interestingly, the vital signs systolic blood pressure, respiratory rate and GCS as well as intubation were all significantly associated with OFI in the unadjusted analysis but not in the adjusted analysis. This could be because these factors indicate more severe trauma, which was more effectively captured by ISS in the adjusted analysis.
+Age was significantly associated with higher odds of OFI and the median age was eight years higher in patients with OFI. The comorbidity, frailty, and differences in clinical presentation of the elderly could be an explanation for higher odds of OFI in these patients. Previous studies have found higher mortality in elderly patients even though there were no major differences in injury severity compared to younger patients [@MacDonald_2020; @Earl_Royal_2016].
 
-OFI was identified in 7.4% of those who died within 30 days. A study published in 2018 from the Karolinska University Hospital identified at least one preventable error in 21% of all trauma deaths, although only 4% of all trauma deaths were found to be preventable or possibly preventable [@Ghorbani2018]. An explanation for the comparably lower number of OFI in those who died in our study is the criteria used to determine the presence of OFI differed, although the adoption of new treatment strategies and the implementation of quality improvement programs can also have played a role.
+ISS was also found to be significantly associated with OFI and the median ISS was 17 in the group with OFI compared to five in patients without OFI, meaning that OFI are more likely in patients with severe trauma. Interestingly, the vital signs systolic blood pressure, respiratory rate and GCS as well as intubation were all significantly associated with OFI in the unadjusted analysis but not in the adjusted analysis. This could be because these factors indicate more severe trauma, which was more effectively captured by ISS in the adjusted analysis.
+
+OFI was identified in 7.4% of those who died within 30 days. A study published in 2018 from the Karolinska University Hospital identified at least one preventable error in 21% of all trauma deaths, although only 4% of all trauma deaths were found to be preventable or possibly preventable [@Ghorbani2018]. An explanation for the comparably lower number of OFI in those who died in our study is that the criteria used in the present study (2017-20121) differed compared to the study by Ghorbani et al (2012-2016), although the adoption of new treatment strategies and the implementation of quality improvement programs can also have played a role.
 
 Our study had several limitations. Although all trauma patients were reviewed by specialized nurses, the selection for review by the morbidity and mortality conference relied mostly on audit filters, meaning that there is a possibility some patients with OFI were not selected for review by the conference and therefore registered as a patient without OFI. Furthermore, this study was a single centre study, and its results illustrates the situation in Stockholm.
 
-In conclusion, the care of patients with more severe trauma and higher hospital care level was found to be significantly associated with OFI after adjusting for other factors. Future research should focus on identifying reasons why the care of patients with severe trauma is more susceptible for OFI and how this can be alleviated.
+In conclusion, the care of patients with more severe trauma and higher hospital care level was found to be significantly associated with OFI after adjusting for other factors. Contrary to earlier scientific believes no higher odds of OFI was found in patients arriving during non-business hours. Delays to first CT more than 30 minutes are however associated with higher odds of OFI. These results could serve as baseline to determine quality indicators for trauma care in Sweden and internationally.
 
 \newpage
+
+
 
 # References
